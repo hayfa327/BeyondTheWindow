@@ -1,0 +1,27 @@
+{
+  "name": "beyondthewindow",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hayfa327/BeyondTheWindow.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hayfa327/BeyondTheWindow/issues"
+  },
+  "homepage": "https://github.com/hayfa327/BeyondTheWindow#readme",
+  "dependencies": {
+    "aframe": "^1.7.1",
+    "three": "^0.184.0",
+    "vite": "^8.0.14"
+  }
+}
