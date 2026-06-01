@@ -1,4 +1,4 @@
-import 'aframe';
-import * as THREE from 'three';
+import './robot-ai.js';
+import './celestial.js';
 
-console.log("Beyond the Window initialized");
+console.log("AETHER-9: All systems nominal.");
