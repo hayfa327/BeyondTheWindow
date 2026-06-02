@@ -1,0 +1,23 @@
+#hud {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    font-family: 'Courier New', Courier, monospace;
+    color: #33ff33;
+}
+
+#ai-comms {
+    background: rgba(0, 30, 0, 0.8);
+    border: 1px solid #33ff33;
+    padding: 15px;
+    width: 350px;
+    margin-top: 10px;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+}
+
+h2 { 
+    margin: 0; 
+    text-transform: uppercase; 
+    letter-spacing: 3px; 
+}
