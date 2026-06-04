@@ -56,7 +56,12 @@ AFRAME.registerComponent('moon-orbit', {
 AFRAME.registerComponent('space-audio', {
   init() {
     this.ctx = null;
+    this.masterGain = null;
     this.humNodes = [];
+    this.isMuted = false;
+
+    // Expose globally so the sound button can call toggleMute()
+    window.__spaceAudio = this;
 
     // Start audio only after a user gesture (browser requirement)
     document.addEventListener('click', () => this._startHum(), { once: true });
@@ -79,19 +84,41 @@ AFRAME.registerComponent('space-audio', {
     mid.type = 'sine';
     mid.frequency.value = 121.5;
 
-    // Slow volume fade-in over 4 seconds
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 4);
+    this.masterGain = ctx.createGain();
+    this.masterGain.gain.setValueAtTime(0, ctx.currentTime);
 
-    bass.connect(gain);
-    mid.connect(gain);
-    gain.connect(ctx.destination);
+    if (!this.isMuted) {
+      this.masterGain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 4);
+    }
+
+    bass.connect(this.masterGain);
+    mid.connect(this.masterGain);
+    this.masterGain.connect(ctx.destination);
 
     bass.start();
     mid.start();
 
-    this.humNodes = [bass, mid, gain];
+    this.humNodes = [bass, mid];
+  },
+
+  // Called by the sound button — returns new muted state
+  toggleMute() {
+    if (!this.ctx) {
+      this._startHum();
+      this.isMuted = false;
+      return false;
+    }
+
+    this.isMuted = !this.isMuted;
+    const now = this.ctx.currentTime;
+
+    if (this.isMuted) {
+      this.masterGain.gain.linearRampToValueAtTime(0, now + 0.3);
+    } else {
+      this.masterGain.gain.linearRampToValueAtTime(0.18, now + 0.5);
+    }
+
+    return this.isMuted;
   },
 
   // Short sci-fi beep at 880 Hz — called by robot AI
@@ -118,6 +145,7 @@ AFRAME.registerComponent('space-audio', {
 
   remove() {
     this.humNodes.forEach(n => { try { n.disconnect(); } catch(e) {} });
+    if (this.masterGain) { try { this.masterGain.disconnect(); } catch(e) {} }
     if (this.ctx) this.ctx.close();
   }
 });

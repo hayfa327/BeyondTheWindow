@@ -7,6 +7,38 @@
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+
+      /* ── SOUND BUTTON ───────────────────────────────────────────────── */
+      #sound-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: 1px solid rgba(80, 160, 255, 0.45);
+        background: rgba(5, 10, 35, 0.82);
+        color: #a8d4ff;
+        font-size: 1.35rem;
+        cursor: pointer;
+        backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s, border-color 0.2s, transform 0.15s;
+        box-shadow: 0 0 16px rgba(40, 100, 255, 0.2);
+      }
+      #sound-btn:hover {
+        background: rgba(20, 50, 120, 0.92);
+        border-color: rgba(80, 160, 255, 0.8);
+        transform: scale(1.1);
+      }
+      #sound-btn.muted {
+        color: #4a6a88;
+        border-color: rgba(80, 160, 255, 0.18);
+        box-shadow: none;
+      }
     </style>
 
     <!-- A-Frame -->
@@ -20,6 +52,9 @@
 
   </head>
   <body>
+
+    <!-- Sound toggle button — top right corner -->
+    <button id="sound-btn" title="Toggle sound">🔊</button>
 
     <a-scene
       space-audio
@@ -85,6 +120,19 @@
       </a-entity>
 
     </a-scene>
+
+    <script>
+      (function () {
+        const btn = document.getElementById('sound-btn');
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation(); // don't let this bubble to the global _startHum listener
+          if (!window.__spaceAudio) return;
+          const muted = window.__spaceAudio.toggleMute();
+          btn.textContent = muted ? '🔇' : '🔊';
+          btn.classList.toggle('muted', muted);
+        });
+      })();
+    </script>
 
   </body>
 </html>
