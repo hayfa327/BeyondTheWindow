@@ -7,6 +7,8 @@
 
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 
+ 
+
   <style>
     html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
     #zoomUI {
@@ -67,6 +69,60 @@
 <button id="learnMoreBtn">
  Talk With HAL
 </button>
+
+<!-- Popup بعد HAL -->
+<div id="hal-popup" style="
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.92);
+  border: 1px solid rgba(255,0,0,0.4);
+  border-left: 3px solid #FF0000;
+  padding: 32px 40px;
+  z-index: 99999;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  min-width: 380px;
+">
+  <div style="color:#FF0000; font-size:11px; letter-spacing:0.3em; margin-bottom:12px;">HAL 9000</div>
+  <div style="color:#ffffff; font-size:15px; line-height:1.8; margin-bottom:24px;">
+    Would you like to continue the conversation?<br>
+    <span style="color:rgba(255,255,255,0.5); font-size:12px;">Enter the HAL interface room</span>
+  </div>
+  <button id="enterHAL" style="
+    background: rgba(255,0,0,0.15);
+    border: 1px solid rgba(255,0,0,0.5);
+    color: #FF0000;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    padding: 12px 28px;
+    cursor: pointer;
+    margin-right: 12px;
+  ">ENTER HAL ROOM</button>
+  <button id="closePopup" style="
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.5);
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    padding: 12px 28px;
+    cursor: pointer;
+  ">STAY</button>
+</div>
+
+<!-- Overlay خلف الـ Popup -->
+<div id="hal-overlay" style="
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 99998;
+"></div>
+
 
 
 <a-scene
@@ -604,7 +660,18 @@ window.addEventListener("load", () => {
 
 });
 
+ // إغلاق الـ Popup
+document.getElementById('closePopup').addEventListener('click', () => {
+  document.getElementById('hal-popup').style.display = 'none';
+  document.getElementById('hal-overlay').style.display = 'none';
+});
+
+// الانتقال لغرفة HAL
+document.getElementById('enterHAL').addEventListener('click', () => {
+  window.location.href = '/hal-room.html';
+});
  
+
  
  
   </script>

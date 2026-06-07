@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jupiter Observation Deck</title>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js">
+  
+let doorOpened = false;
+
+function checkDoor() {
+  const cam = document.querySelector('#camRig');
+  const door = document.querySelector('#doorPanel');
+
+  if (!cam || !door) {
+    requestAnimationFrame(checkDoor);
+    return;
+  }
+
+  const pos = cam.object3D.position;
+
+  if (!doorOpened && pos.x < -7) {
+    doorOpened = true;
+
+    door.setAttribute(
+      'animation',
+      'property: position; to: -12 2.5 -2; dur: 2000; easing: easeInOutQuad'
+    );
+  }
+
+  requestAnimationFrame(checkDoor);
+}
+
+checkDoor();
+
+</script>
+ <script type="module" src="/src/celestial.js"></script>
+<style>
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+
+/* Talk With HAL button */
+#learnMoreBtn {
+  position: fixed;
+  bottom: 30px;
+  left: 30px;
+  z-index: 99999;
+  background: rgba(255,0,0,0.12);
+  border: 1px solid rgba(255,0,0,0.4);
+  color: #FF4444;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  padding: 12px 24px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+
+/* HAL popup */
+#hal-popup {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  background: rgba(0,0,0,0.92);
+  border: 1px solid rgba(255,0,0,0.4);
+  border-left: 3px solid #FF0000;
+  padding: 32px 40px;
+  z-index: 99999;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  min-width: 380px;
+}
+#hal-popup .hal-label { color:#FF0000; font-size:11px; letter-spacing:0.3em; margin-bottom:12px; }
+#hal-popup .hal-message { color:#fff; font-size:15px; line-height:1.8; margin-bottom:24px; }
+#hal-popup .hal-message span { color:rgba(255,255,255,0.5); font-size:12px; }
+#enterHAL { background:rgba(255,0,0,0.15); border:1px solid rgba(255,0,0,0.5); color:#FF0000; font-family:'Courier New',monospace; font-size:13px; letter-spacing:0.2em; padding:12px 28px; cursor:pointer; margin-right:12px; }
+#closePopup { background:transparent; border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.5); font-family:'Courier New',monospace; font-size:13px; letter-spacing:0.2em; padding:12px 28px; cursor:pointer; }
+#hal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99998; }
+
+/* Start overlay */
+#startOverlay {
+  position: fixed; inset: 0; z-index: 999999;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.9); cursor: pointer;
+  font-family: 'Courier New', monospace;
+}
+#startOverlay .hal-title { color:#FF0000; font-size:13px; letter-spacing:0.4em; margin-bottom:18px; }
+#startOverlay .deck-title { color:#fff; font-size:22px; letter-spacing:0.15em; margin-bottom:10px; }
+#startOverlay .click-prompt { color:rgba(255,255,255,0.45); font-size:12px; letter-spacing:0.2em; margin-top:24px; }
+#startOverlay .pulse-dot { margin-top:30px; width:10px; height:10px; border-radius:50%; background:#FF0000; box-shadow:0 0 18px #FF0000; animation:pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.7)} }
+</style>
+</head>
+<body>
+
+ <button id="learnMoreBtn"  onclick="window.location.href='./2.html'">Talk With HAL</button>
+
+<div id="hal-popup">
+  <div class="hal-label">HAL 9000</div>
+  <div class="hal-message">Would you like to continue the conversation?<br><span>Enter the HAL interface room</span></div>
+  <button id="enterHAL">ENTER HAL ROOM</button>
+  <button id="closePopup">STAY</button>
+</div>
+<div id="hal-overlay"></div>
+
+<a-scene
+  background="color:#050508"
+  renderer="antialias:true; colorManagement:true; physicallyCorrectLights:true">
+
+  <a-assets>
+    <a-asset-item id="jupiterModel" src="/public/assets/models/jupiterMove.glb.glb"></a-asset-item>
+      <img id="nebulaTex" src="/assets/textures/beautiful-view-stars-night-sky.jpg" crossorigin="anonymous" alt="Beautiful view of stars and night sky" />
+  </a-assets>
+
+        <a-sphere
+        id="nebula1"
+        radius="600"
+        segments-width="64"
+        segments-height="64"
+        src="#nebulaTex"
+        material="side: back; opacity: 0.75; transparent: true; blending: additive; depthWrite: false; shader: flat"
+        animation="property: rotation; to: 5 360 2; loop: true; dur: 120000; easing: linear"
+      ></a-sphere>
+
+      <!-- Sphere 2: same image, tilted + opposite rotation = parallax depth -->
+      <a-sphere
+        id="nebula2"
+        radius="750"
+        segments-width="64"
+        segments-height="64"
+        src="#nebulaTex"
+        rotation="54 0 27"
+        material="side: back; opacity: 0.35; transparent: true; blending: additive; depthWrite: false; shader: flat"
+        animation="property: rotation; to: 54 -360 27; loop: true; dur: 180000; easing: linear"
+      ></a-sphere>
+
+  <!-- FLOOR — dark almost black, slight reflection -->
+  <a-plane position="0 0 -5" rotation="-90 0 0" width="20" height="14"
+    color="#0C0C0C" roughness="0.15" metalness="0.5"></a-plane>
+
+  <!-- CEILING — very dark -->
+  <a-plane position="0 5.5 -5" rotation="90 0 0" width="20" height="14"
+    color="#0A0A0A" roughness="0.95"></a-plane>
+
+  <!-- LEFT WALL -->
+  <a-plane position="-17 2.75 -5" rotation="0 90 0" width="14" height="5.5"
+    color="#111111" roughness="0.9"></a-plane>
+
+  <!-- RIGHT WALL -->
+  <a-plane position="17 2.75 -5" rotation="0 -90 0" width="14" height="5.5"
+    color="#111111" roughness="0.9"></a-plane>
+
+  <!-- BACK WALL — behind camera -->
+  <a-plane position="0 2.75 4" rotation="0 180 0" width="20" height="5.5"
+    color="#0E0E0E" roughness="0.9"></a-plane>
+
+  <!-- FRONT WALL — window side: thin strips only -->
+  <!-- left flank -->
+  <a-box position="-9 2.75 -10" width="2" height="5.5" depth="0.25"
+    color="#0E0E0E" roughness="0.9"></a-box>
+  <!-- right flank -->
+  <a-box position="9 2.75 -10" width="2" height="5.5" depth="0.25"
+    color="#0E0E0E" roughness="0.9"></a-box>
+  <!-- top strip -->
+  <a-box position="0 5.2 -10" width="20" height="0.6" depth="0.25"
+    color="#0E0E0E" roughness="0.9"></a-box>
+  <!-- bottom sill -->
+  <a-box position="0 0.3 -10" width="20" height="0.6" depth="0.25"
+    color="#0E0E0E" roughness="0.9"></a-box>
+
+  <!-- ══ WINDOW FRAME — dark metal, beveled, like the photo ══ -->
+  <!-- outer frame — chamfered look with multiple boxes -->
+  <!-- TOP bar — outer -->
+  <a-box position="0 4.95 -10.1" width="30" height="0.25" depth="0.5"
+    color="#1C1C1C" roughness="0.2" metalness="0.85"></a-box>
+  <!-- TOP bar — inner bevel -->
+  <a-box position="0 4.82 -9.92" width="16.0" height="0.12" depth="0.18"
+    color="#333333" roughness="0.15" metalness="0.9"></a-box>
+
+  <!-- BOTTOM bar — outer -->
+  <a-box position="0 0.62 -10.1" width="30" height="0.25" depth="0.5"
+    color="#1C1C1C" roughness="0.2" metalness="0.85"></a-box>
+  <!-- BOTTOM bar — inner bevel / cold LED -->
+  <a-box position="0 0.75 -9.92" width="16.0" height="0.06" depth="0.12"
+    color="#88BBFF" emissive="#88BBFF" emissive-intensity="0.5"></a-box>
+
+  <!-- LEFT post -->
+  <a-box position="-15 2.78 -10.1" width="0.28" height="4.4" depth="0.5"
+    color="#1C1C1C" roughness="0.2" metalness="0.85"></a-box>
+  <a-box position="-7.98 2.78 -9.92" width="0.1" height="4.2" depth="0.18"
+    color="#333333" roughness="0.15" metalness="0.9"></a-box>
+
+  <!-- RIGHT post -->
+  <a-box position="15 2.78 -10.1" width="0.28" height="4.4" depth="0.5"
+    color="#1C1C1C" roughness="0.2" metalness="0.85"></a-box>
+  <a-box position="7.98 2.78 -9.92" width="0.1" height="4.2" depth="0.18"
+    color="#333333" roughness="0.15" metalness="0.9"></a-box>
+
+  <!-- CORNER bevels — diagonal cuts at 4 corners like the photo -->
+  <a-box position="-7.7 4.65 -10.1" rotation="0 0 45" width="0.3" height="0.3" depth="0.5"
+    color="#1C1C1C" roughness="0.2" metalness="0.85"></a-box>
+  <a-box position="7.7 4.65 -10.1" rotation="0 0 -45" width="0.3" height="0.3" depth="0.5"
+    color="#1C1C1C" roughness="0.2" metalness="0.85"></a-box>
+  <a-box position="-7.7 0.92 -10.1" rotation="0 0 -45" width="0.3" height="0.3" depth="0.5"
+    color="#1C1C1C" roughness="0.2" metalness="0.85"></a-box>
+  <a-box position="7.7 0.92 -10.1" rotation="0 0 45" width="0.3" height="0.3" depth="0.5"
+    color="#1C1C1C" roughness="0.2" metalness="0.85"></a-box>
+
+  <!-- TOP LED strip — warm white, subtle -->
+  <a-box position="0 4.92 -9.88" width="15.6" height="0.02" depth="0.05"
+    color="#FFFDF0" emissive="#FFFDF0" emissive-intensity="0.6"></a-box>
+
+  <!-- GLASS — almost invisible -->
+  <a-plane position="0 2.78 -9.85" width="34" height="5.2"
+    color="#C8E8FF" opacity="0.03" transparent="true"></a-plane>
+
+  <!-- ══ CEILING LIGHT STRIPS — like the photo (two parallel lines) ══ -->
+  <!-- strip 1 -->
+  <a-box position="-1.5 5.47 -3" width="0.35" height="0.04" depth="10"
+    color="#FFFDF0" emissive="#FFFDF0" emissive-intensity="0.7"></a-box>
+  <!-- strip 2 -->
+  <a-box position="1.5 5.47 -3" width="0.35" height="0.04" depth="10"
+    color="#FFFDF0" emissive="#FFFDF0" emissive-intensity="0.7"></a-box>
+
+  <!-- ══ FLOOR ACCENT LINE ══ -->
+  <a-box position="0 0.005 -5" width="0.04" height="0.01" depth="14"
+    color="#FF2200" emissive="#FF2200" emissive-intensity="0.3" opacity="0.5" transparent="true"></a-box>
+
+  <!-- ══ HAL 9000 PANEL — RIGHT WALL, like the photo ══ -->
+  <!-- Mounted on right wall, facing left into room -->
+
+  <!-- backdrop panel on right wall -->
+  <a-box position="9.85 3.2 -6" rotation="0 -90 0"
+    width="3.5" height="4.2" depth="0.2"
+    color="#111111" roughness="0.6" metalness="0.2"></a-box>
+
+  <!-- outer frame silver -->
+  <a-box position="9.78 3.2 -6" rotation="0 -90 0"
+    width="2.2" height="4.0" depth="0.14"
+    color="#666666" roughness="0.15" metalness="0.95"></a-box>
+
+  <!-- inner black body -->
+  <a-box position="9.72 3.2 -6" rotation="0 -90 0"
+    width="1.95" height="3.75" depth="0.1"
+    color="#060606" roughness="0.9"></a-box>
+
+  <!-- HAL label top -->
+  <a-text position="9.6 4.8 -6" rotation="0 -90 0"
+    value="HAL 9000" color="#88AACC"
+    width="2.0" align="center"></a-text>
+
+  <!-- label background bar -->
+  <a-box position="9.68 4.78 -6" rotation="0 -90 0"
+    width="1.6" height="0.22" depth="0.06"
+    color="#112233" emissive="#001133" emissive-intensity="0.6"></a-box>
+
+  <!-- divider line -->
+  <a-box position="9.67 4.55 -6" rotation="0 -90 0"
+    width="1.75" height="0.02" depth="0.04"
+    color="#445566" emissive="#335577" emissive-intensity="0.3"></a-box>
+
+  <!-- outer ring — dark machined -->
+  <a-torus position="9.65 3.5 -6" rotation="0 90 0"
+    radius="0.42" radius-tubular="0.09"
+    segments-radial="48" segments-tubular="20"
+    color="#1A1A1A" roughness="0.3" metalness="0.95"></a-torus>
+
+  <!-- middle ring — polished -->
+  <a-torus position="9.62 3.5 -6" rotation="0 90 0"
+    radius="0.33" radius-tubular="0.05"
+    segments-radial="48" segments-tubular="20"
+    color="#444444" roughness="0.1" metalness="1"></a-torus>
+
+  <!-- HAL EYE — glowing red -->
+  <a-circle id="hal-eye" position="9.59 3.5 -6" rotation="0 90 0"
+    radius="0.25"
+    color="#880000" emissive="#FF0000" emissive-intensity="3"
+    animation="property:emissive-intensity;from:3;to:0.7;dir:alternate;loop:true;dur:3000;easing:easeInOutSine">
+  </a-circle>
+
+  <a-sphere
+    id="hal-camera-reflection"
+    position="9.54 3.62 -5.90"
+    radius="0.025"
+    color="#FFFFFF"
+    emissive="#FFFFFF"
+    emissive-intensity="6"
+    animation="property: scale; from: 1 1 1; to: 1.4 1.4 1.4; dir: alternate; loop: true; dur: 1200">
+  </a-sphere>
+
+  <!-- eye dark inner -->
+  <a-circle position="9.57 3.5 -6" rotation="0 90 0"
+    radius="0.12" color="#220000" emissive="#550000" emissive-intensity="1"></a-circle>
+
+  <!-- eye highlight -->
+  <a-circle position="9.55 3.6 -5.92" rotation="0 90 0"
+    radius="0.055" color="#FFFFFF" emissive="#FFFFFF" emissive-intensity="0.6"
+    opacity="0.5" transparent="true"></a-circle>
+
+  <!-- speaker grille -->
+  <a-box position="9.66 2.65 -6" rotation="0 -90 0" width="1.5" height="0.035" depth="0.05" color="#1A1A1A"></a-box>
+  <a-box position="9.66 2.52 -6" rotation="0 -90 0" width="1.5" height="0.035" depth="0.05" color="#1A1A1A"></a-box>
+  <a-box position="9.66 2.39 -6" rotation="0 -90 0" width="1.5" height="0.035" depth="0.05" color="#1A1A1A"></a-box>
+  <a-box position="9.66 2.26 -6" rotation="0 -90 0" width="1.5" height="0.035" depth="0.05" color="#1A1A1A"></a-box>
+  <a-box position="9.66 2.13 -6" rotation="0 -90 0" width="1.5" height="0.035" depth="0.05" color="#1A1A1A"></a-box>
+  <a-box position="9.66 2.00 -6" rotation="0 -90 0" width="1.5" height="0.035" depth="0.05" color="#1A1A1A"></a-box>
+  <a-box position="9.66 1.87 -6" rotation="0 -90 0" width="1.5" height="0.035" depth="0.05" color="#1A1A1A"></a-box>
+  <a-box position="9.66 1.74 -6" rotation="0 -90 0" width="1.5" height="0.035" depth="0.05" color="#1A1A1A"></a-box>
+
+  <!-- HAL red glow into room -->
+  <a-light id="hal-light" type="point" position="7.5 3.5 -6"
+    color="#FF0000" intensity="1.5" distance="10" decay="2"
+    animation="property:intensity;from:1.5;to:0.3;dir:alternate;loop:true;dur:3000;easing:easeInOutSine">
+  </a-light>
+
+  <!-- ══ DOOR — LEFT WALL like the photo ══ -->
+  <!-- door frame -->
+  <a-box position="-9.85 2.5 -2" rotation="0 90 0"
+    width="3.5" height="5" depth="0.15"
+    color="#151515" roughness="0.5" metalness="0.3"></a-box>
+  <!-- door panel inner -->
+  <a-box id="doorPanel" position="-9.75 2.5 -2" rotation="0 90 0"
+    width="2.8" height="4.4" depth="0.08"
+    color="#1E1E1E" roughness="0.4" metalness="0.2"></a-box>
+  <!-- door vertical dividers -->
+  <a-box position="-9.7 2.5 -1.6" rotation="0 90 0" width="0.05" height="4.2" depth="0.05" color="#2A2A2A" roughness="0.3" metalness="0.5"></a-box>
+  <a-box position="-9.7 2.5 -2.4" rotation="0 90 0" width="0.05" height="4.2" depth="0.05" color="#2A2A2A" roughness="0.3" metalness="0.5"></a-box>
+  <!-- door light strip -->
+  <a-box position="-9.7 4.7 -2" rotation="0 90 0"
+    width="0.04" height="0.04" depth="2.6"
+    color="#AADDFF" emissive="#AADDFF" emissive-intensity="0.6"></a-box>
+  <!-- door handle -->
+  <a-box position="-9.68 2.5 -2.9" rotation="0 90 0"
+    width="0.08" height="0.5" depth="0.12"
+    color="#444444" roughness="0.2" metalness="0.9"></a-box>
+
+  <!-- ══ CONTROL DESK — wide like the photo ══ -->
+  <!-- main surface -->
+  <a-box position="0 0.82 -7.5"
+    width="17" height="0.1" depth="3.2"
+    color="#181818" roughness="0.2" metalness="0.7"></a-box>
+
+  <!-- front panel vertical face -->
+  <a-box position="0 0.4 -6.0"
+    width="17" height="0.8" depth="0.12"
+    color="#141414" roughness="0.4" metalness="0.5"></a-box>
+
+  <!-- desk legs / supports -->
+  <a-box position="-8 0.4 -7.5" width="0.15" height="0.8" depth="3.2" color="#111111" metalness="0.6"></a-box>
+  <a-box position="8 0.4 -7.5"  width="0.15" height="0.8" depth="3.2" color="#111111" metalness="0.6"></a-box>
+  <a-box position="0 0.4 -7.5"  width="0.12" height="0.8" depth="3.2" color="#111111" metalness="0.6"></a-box>
+
+  <!-- front desk red LED edge -->
+  <a-box position="0 0.835 -6.05" width="16.6" height="0.018" depth="0.04"
+    color="#FF2200" emissive="#FF2200" emissive-intensity="0.5" opacity="0.7" transparent="true"></a-box>
+
+  <!-- ══ CENTRE MONITOR ══ -->
+  <a-box position="0 0.96 -7.8" width="0.08" height="0.25" depth="0.08" color="#222222" metalness="0.7"></a-box>
+  <a-box position="0 0.9 -7.8"  width="0.45" height="0.05" depth="0.35" color="#1A1A1A" metalness="0.6"></a-box>
+  <!-- screen -->
+  <a-box position="0 1.7 -8.1" width="3.2" height="1.8" depth="0.07"
+    color="#111111" roughness="0.1" metalness="0.9"></a-box>
+  <a-plane position="0 1.7 -8.06" width="3.0" height="1.65"
+    color="#000C08" emissive="#001A0A" emissive-intensity="1"></a-plane>
+  <!-- screen content -->
+  <a-box position="-0.8 2.15 -8.04" width="1.0" height="0.04" depth="0.01" color="#00FF66" emissive="#00FF66" emissive-intensity="1"></a-box>
+  <a-box position="-0.5 2.02 -8.04" width="0.7" height="0.03" depth="0.01" color="#00FF66" emissive="#00FF66" emissive-intensity="0.7"></a-box>
+  <a-box position="-0.7 1.89 -8.04" width="0.8" height="0.03" depth="0.01" color="#00FF66" emissive="#00FF66" emissive-intensity="0.7"></a-box>
+  <a-box position="0.5 2.15 -8.04" width="0.6" height="0.03" depth="0.01" color="#00BB55" emissive="#00BB55" emissive-intensity="0.6"></a-box>
+  <!-- ship diagram outline -->
+  <a-box position="0 1.5 -8.04" width="2.6" height="0.3" depth="0.01" color="#001A08" emissive="#003311" emissive-intensity="0.8"></a-box>
+  <a-light type="point" position="0 1.7 -7.9" color="#00FF44" intensity="0.2" distance="3"></a-light>
+
+  <!-- ══ LEFT MONITOR ══ -->
+  <a-box position="-4.5 0.96 -7.6" width="0.07" height="0.2" depth="0.07" color="#222222" metalness="0.7"></a-box>
+  <a-box position="-4.5 1.55 -7.8" width="2.4" height="1.4" depth="0.07"
+    color="#111111" roughness="0.1" metalness="0.9" rotation="0 10 0"></a-box>
+  <a-plane position="-4.5 1.55 -7.76" width="2.2" height="1.25" rotation="0 10 0"
+    color="#000811" emissive="#001133" emissive-intensity="0.9"></a-plane>
+  <!-- content lines -->
+  <a-box position="-4.8 1.8 -7.74" width="0.8" height="0.03" depth="0.01" rotation="0 10 0" color="#0055FF" emissive="#0055FF" emissive-intensity="0.8"></a-box>
+  <a-box position="-4.5 1.65 -7.74" width="0.6" height="0.025" depth="0.01" rotation="0 10 0" color="#0044CC" emissive="#0044CC" emissive-intensity="0.6"></a-box>
+  <a-box position="-4.6 1.5 -7.74" width="0.7" height="0.025" depth="0.01" rotation="0 10 0" color="#0033AA" emissive="#0033AA" emissive-intensity="0.5"></a-box>
+  <a-light type="point" position="-4.5 1.55 -7.6" color="#0055FF" intensity="0.12" distance="2"></a-light>
+
+  <!-- ══ RIGHT MONITOR ══ -->
+  <a-box position="4.5 0.96 -7.6" width="0.07" height="0.2" depth="0.07" color="#222222" metalness="0.7"></a-box>
+  <a-box position="4.5 1.55 -7.8" width="2.4" height="1.4" depth="0.07"
+    color="#111111" roughness="0.1" metalness="0.9" rotation="0 -10 0"></a-box>
+  <a-plane position="4.5 1.55 -7.76" width="2.2" height="1.25" rotation="0 -10 0"
+    color="#0A0008" emissive="#1A0011" emissive-intensity="0.9"></a-plane>
+  <a-box position="4.8 1.8 -7.74" width="0.8" height="0.03" depth="0.01" rotation="0 -10 0" color="#AA0033" emissive="#AA0033" emissive-intensity="0.8"></a-box>
+  <a-box position="4.5 1.65 -7.74" width="0.6" height="0.025" depth="0.01" rotation="0 -10 0" color="#880022" emissive="#880022" emissive-intensity="0.6"></a-box>
+  <a-light type="point" position="4.5 1.55 -7.6" color="#CC0044" intensity="0.12" distance="2"></a-light>
+
+  <!-- ══ KEYBOARD ══ -->
+  <a-box position="0 0.875 -6.8" width="3.2" height="0.045" depth="1.1"
+    color="#1A1A1A" roughness="0.3" metalness="0.5"></a-box>
+  <a-box position="0 0.925 -6.5"  width="3.0" height="0.045" depth="0.16" color="#242424" roughness="0.4" metalness="0.4"></a-box>
+  <a-box position="0 0.925 -6.68" width="3.0" height="0.045" depth="0.16" color="#1E1E1E" roughness="0.4" metalness="0.4"></a-box>
+  <a-box position="0 0.925 -6.86" width="3.0" height="0.045" depth="0.16" color="#242424" roughness="0.4" metalness="0.4"></a-box>
+  <a-box position="0 0.925 -7.04" width="2.7" height="0.045" depth="0.16" color="#1E1E1E" roughness="0.4" metalness="0.4"></a-box>
+  <a-box position="0.2 0.925 -7.18" width="1.4" height="0.045" depth="0.12" color="#2A2A2A" roughness="0.3" metalness="0.5"></a-box>
+
+  <!-- ══ CONTROL PANELS ON DESK — like the photo ══ -->
+  <!-- far left panel -->
+  <a-box position="-7 0.875 -7.2" width="3.5" height="0.065" depth="2.5"
+    color="#161616" roughness="0.3" metalness="0.6"></a-box>
+  <a-box position="-7.5 0.945 -6.8" width="0.18" height="0.06" depth="0.18" color="#2A2A2A" roughness="0.3" metalness="0.5"></a-box>
+  <a-box position="-7.1 0.945 -6.8" width="0.18" height="0.06" depth="0.18" color="#2A2A2A" roughness="0.3" metalness="0.5"></a-box>
+  <a-box position="-6.7 0.945 -6.8" width="0.18" height="0.06" depth="0.18" color="#111111" roughness="0.3" metalness="0.4"></a-box>
+  <a-box position="-6.3 0.945 -6.8" width="0.18" height="0.06" depth="0.18" color="#2A2A2A" roughness="0.3" metalness="0.5"></a-box>
+  <a-sphere position="-7.5 0.96 -7.4" radius="0.07" color="#FF2200" emissive="#FF2200" emissive-intensity="2"
+    animation="property:emissive-intensity;from:2;to:0.3;dir:alternate;loop:true;dur:2200;easing:easeInOutSine"></a-sphere>
+  <a-sphere position="-7.1 0.96 -7.4" radius="0.07" color="#00FF44" emissive="#00FF44" emissive-intensity="2"
+    animation="property:emissive-intensity;from:2;to:0.4;dir:alternate;loop:true;dur:1700;easing:easeInOutSine"></a-sphere>
+  <a-sphere position="-6.7 0.96 -7.4" radius="0.07" color="#FFB800" emissive="#FFB800" emissive-intensity="1.5"
+    animation="property:emissive-intensity;from:1.5;to:0.2;dir:alternate;loop:true;dur:3300;easing:easeInOutSine"></a-sphere>
+  <!-- dial on left panel -->
+  <a-cylinder position="-6.3 0.92 -7.6" radius="0.14" height="0.05" color="#2A2A2A" roughness="0.2" metalness="0.8"></a-cylinder>
+  <a-box position="-6.3 0.96 -7.6" width="0.03" height="0.05" depth="0.22" color="#888888" metalness="0.9"></a-box>
+
+  <!-- far right panel -->
+  <a-box position="7 0.875 -7.2" width="3.5" height="0.065" depth="2.5"
+    color="#161616" roughness="0.3" metalness="0.6"></a-box>
+  <a-box position="7.5 0.945 -6.8" width="0.18" height="0.06" depth="0.18" color="#2A2A2A" roughness="0.3" metalness="0.5"></a-box>
+  <a-box position="7.1 0.945 -6.8" width="0.18" height="0.06" depth="0.18" color="#2A2A2A" roughness="0.3" metalness="0.5"></a-box>
+  <a-box position="6.7 0.945 -6.8" width="0.18" height="0.06" depth="0.18" color="#2A2A2A" roughness="0.3" metalness="0.5"></a-box>
+  <a-box position="6.3 0.945 -6.8" width="0.18" height="0.06" depth="0.18" color="#111111" roughness="0.3" metalness="0.4"></a-box>
+  <a-cylinder position="7.5 0.92 -7.6" radius="0.14" height="0.05" color="#2A2A2A" roughness="0.2" metalness="0.8"></a-cylinder>
+  <a-box position="7.5 0.96 -7.6" width="0.03" height="0.05" depth="0.22" color="#888888" metalness="0.9"></a-box>
+  <a-sphere position="6.7 0.96 -7.4" radius="0.07" color="#00FF44" emissive="#00FF44" emissive-intensity="1.8"
+    animation="property:emissive-intensity;from:1.8;to:0.3;dir:alternate;loop:true;dur:2800;easing:easeInOutSine"></a-sphere>
+  <a-sphere position="7.1 0.96 -7.4" radius="0.07" color="#FFB800" emissive="#FFB800" emissive-intensity="1.5"
+    animation="property:emissive-intensity;from:1.5;to:0.2;dir:alternate;loop:true;dur:1900;easing:easeInOutSine"></a-sphere>
+
+  <!-- coffee mug -->
+  <a-cylinder position="2.2 0.92 -6.9" radius="0.07" height="0.18" color="#181818" roughness="0.4" metalness="0.3"></a-cylinder>
+  <a-cylinder position="2.2 0.925 -6.9" radius="0.065" height="0.16" color="#080402" emissive="#080402" emissive-intensity="0.15"></a-cylinder>
+  <a-torus position="2.27 0.9 -6.9" rotation="0 0 90" radius="0.05" radius-tubular="0.01" color="#222222"></a-torus>
+
+  <!-- ══ CHAIR — low, dark, reclined like the photo ══ -->
+  <!-- seat base -->
+  <a-box position="0 0.52 -2.5" width="1.1" height="0.1" depth="1.1"
+    color="#1A1A1A" roughness="0.7" metalness="0.1"></a-box>
+  <!-- seat cushion -->
+  <a-box position="0 0.58 -2.5" width="1.0" height="0.06" depth="1.0"
+    color="#141414" roughness="0.8" metalness="0.05"></a-box>
+  <!-- backrest -->
+  <a-box position="0 1.1 -2.0" width="1.0" height="1.1" depth="0.1"
+    color="#181818" roughness="0.7" metalness="0.1"></a-box>
+  <!-- backrest cushion -->
+  <a-box position="0 1.1 -1.94" width="0.9" height="1.0" depth="0.06"
+    color="#131313" roughness="0.8" metalness="0.05"></a-box>
+  <!-- legs -->
+  <a-box position="-0.5 0.28 -2.5"  width="0.07" height="0.56" depth="0.07" color="#2A2A2A" metalness="0.7"></a-box>
+  <a-box position="0.5 0.28 -2.5"   width="0.07" height="0.56" depth="0.07" color="#2A2A2A" metalness="0.7"></a-box>
+  <a-box position="-0.5 0.28 -2.0"  width="0.07" height="0.56" depth="0.07" color="#2A2A2A" metalness="0.7"></a-box>
+  <a-box position="0.5 0.28 -2.0"   width="0.07" height="0.56" depth="0.07" color="#2A2A2A" metalness="0.7"></a-box>
+  <!-- armrests -->
+  <a-box position="-0.58 0.72 -2.4" width="0.09" height="0.05" depth="0.85" color="#1E1E1E" roughness="0.5" metalness="0.3"></a-box>
+  <a-box position="0.58 0.72 -2.4"  width="0.09" height="0.05" depth="0.85" color="#1E1E1E" roughness="0.5" metalness="0.3"></a-box>
+
+  <!-- ══ JUPITER — large, filling window like the photo ══ -->
+  <a-entity id="jupiter"
+    gltf-model="#jupiterModel"
+    position="-3 3.2 -80"
+    scale="8 8 8"
+    rotation="3 0 -2"
+    animation="property:rotation; to:3 360 -2; dur:120000; loop:true; easing:linear">
+  </a-entity>
+
+  <!-- ══ MOONS — orbiting Jupiter ══ -->
+  <a-entity position="-2 3.8 -120"
+    animation="property:rotation; to:0 360 0; dur:18000; loop:true; easing:linear">
+    <a-sphere position="7 0 0" radius="0.22"
+      color="#CC9944" emissive="#885522" emissive-intensity="0.3" roughness="0.8"></a-sphere>
+  </a-entity>
+  <a-entity position="-2 3.8 -120"
+    animation="property:rotation; to:0 360 0; dur:32000; loop:true; easing:linear">
+    <a-sphere position="10 0.5 0" radius="0.18"
+      color="#DDEEFF" emissive="#8899AA" emissive-intensity="0.25" roughness="0.3"></a-sphere>
+  </a-entity>
+  <a-entity position="-2 3.8 -120"
+    animation="property:rotation; to:0 360 0; dur:55000; loop:true; easing:linear">
+    <a-sphere position="14 -0.8 0" radius="0.3"
+      color="#998877" emissive="#554433" emissive-intensity="0.2" roughness="0.9"></a-sphere>
+  </a-entity>
+
+ 
+  <!-- ══ LIGHTING ══════════════════════════════════════════════ -->
+
+  <!-- ambient — very dark blue space mood -->
+  <a-light type="ambient" color="#111822" intensity="0.8"></a-light>
+
+  <!-- MAIN ceiling strips — warm white, soft -->
+  <a-light type="point" position="-1.5 5.3 -3" color="#FFFDF0" intensity="2.5" distance="16" decay="1.2"></a-light>
+  <a-light type="point" position="1.5 5.3 -3"  color="#FFFDF0" intensity="2.5" distance="16" decay="1.2"></a-light>
+
+  <!-- Cold space light through window — blue white -->
+  <a-light type="point" position="0 2.78 -9.5"
+    color="#99CCFF" intensity="4.0" distance="20" decay="1.2"></a-light>
+
+  <!-- Jupiter warm orange glow — subtle -->
+  <a-light type="point" position="-2 3.8 -11"
+    color="#FF8833" intensity="0.6" distance="8" decay="2"></a-light>
+
+  <!-- Blue rim lights near window sides -->
+  <a-light type="point" position="-7 2.5 -9" color="#2244AA" intensity="1.2" distance="8" decay="2"></a-light>
+  <a-light type="point" position="7 2.5 -9"  color="#2244AA" intensity="1.2" distance="8" decay="2"></a-light>
+
+  <!-- HAL red glow right wall -->
+  <a-light type="point" position="7 3.5 -6"
+    color="#FF0000" intensity="1.8" distance="9" decay="2"
+    animation="property:intensity;from:1.8;to:0.3;dir:alternate;loop:true;dur:3000;easing:easeInOutSine">
+  </a-light>
+
+  <!-- desk monitor fill — green -->
+  <a-light type="point" position="0 1.5 -7.5" color="#003300" intensity="1.5" distance="6" decay="1.5"></a-light>
+
+  <!-- floor reflection fill — very subtle -->
+  <a-light type="point" position="0 0.1 -5" color="#111122" intensity="0.5" distance="8" decay="1"></a-light>
+
+  <!-- Jupiter sunlight — strong from upper left -->
+  <a-light type="point" position="-60 40 20"
+    color="#FFF8E8" intensity="30" distance="500" decay="1"></a-light>
+  <!-- secondary fill for Jupiter -->
+  <a-light type="point" position="20 10 -30"
+    color="#FFE8CC" intensity="10" distance="300" decay="1"></a-light>
+
+  <!-- ══ CAMERA ══ -->
+  <a-entity id="camRig" position="0 1.7 9" rotation="0 0 0">
+    <a-camera fov="72"
+      look-controls="enabled:true; reverseMouseDrag:false"
+      wasd-controls="enabled:true">
+    </a-camera>
+  </a-entity>
+
+</a-scene>
+
+<script>
+  // ── MOUSE LOOK — limited horizontal only ─────────────
+  const camRig = document.querySelector('#camRig');
+  const MAX_ANGLE = 40;
+  let targetY = 0;
+
+  document.addEventListener('mousemove', (e) => {
+    const ratio = (e.clientX / window.innerWidth - 0.5) * 2;
+    targetY = -ratio * MAX_ANGLE;
+  });
+
+  function animateCam() {
+    if (camRig && camRig.object3D) {
+      const targetRad = THREE.MathUtils.degToRad(targetY);
+      camRig.object3D.rotation.y += (targetRad - camRig.object3D.rotation.y) * 0.04;
+    }
+    requestAnimationFrame(animateCam);
+  }
+
+  // ── HAL SPEECH ───────────────────────────────────────
+  let halHasSpoken = false;
+
+  function speakHAL(text) {
+    const eye = document.querySelector('#hal-eye');
+    if (eye) {
+      eye.setAttribute('color', '#FF5555');
+      eye.setAttribute('animation__talk',
+      'property: scale; from:1 1 1; to:1.25 1.25 1.25; dir:alternate; loop:true; dur:220');
+      eye.setAttribute('animation',
+        'property:emissive-intensity;from:4;to:1;dir:alternate;loop:true;dur:250;easing:easeInOutSine');
+    }
+    const speech = new SpeechSynthesisUtterance(text);
+    speech.lang = 'en-US';
+    speech.rate = 0.75;
+    speech.pitch = 0.55;
+    speech.volume = 1;
+    speech.onend = () => {
+      if (eye) {
+        eye.removeAttribute('animation');
+        eye.removeAttribute('animation__talk');
+        eye.object3D.scale.set(1,1,1);
+        eye.setAttribute('animation',
+          'property:emissive-intensity;from:3;to:0.7;dir:alternate;loop:true;dur:3000;easing:easeInOutSine');
+      }
+      setTimeout(() => {
+        document.getElementById('hal-popup').style.display = 'block';
+        document.getElementById('hal-overlay').style.display = 'block';
+      }, 1500);
+    };
+    speechSynthesis.speak(speech);
+  }
+
+  const HAL_GREETING =
+   "I have studied Jupiter for 847 days. I still find its scale difficult to comprehend."
+
+  // Start overlay
+  const startOverlay = document.createElement('div');
+  startOverlay.id = 'startOverlay';
+  startOverlay.innerHTML = `
+    <div class="hal-title">HAL 9000</div>
+    <div class="deck-title">JUPITER OBSERVATION DECK</div>
+    <div class="click-prompt">CLICK ANYWHERE TO BEGIN</div>
+    <div class="pulse-dot"></div>`;
+
+  // inline styles since CSS is in separate file
+  Object.assign(startOverlay.style, {
+    position: 'fixed', inset: '0', zIndex: '999999',
+    display: 'flex', flexDirection: 'column',
+    alignItems: 'center', justifyContent: 'center',
+    background: 'rgba(0,0,0,0.9)', cursor: 'pointer',
+    fontFamily: "'Courier New', monospace"
+  });
+  startOverlay.querySelector('.hal-title') && null;
+  document.body.appendChild(startOverlay);
+
+  // style children
+  const st = document.getElementById('startOverlay');
+  st.children[0].style.cssText = 'color:#FF0000;font-size:13px;letter-spacing:0.4em;margin-bottom:18px;';
+  st.children[1].style.cssText = 'color:#fff;font-size:22px;letter-spacing:0.15em;margin-bottom:10px;';
+  st.children[2].style.cssText = 'color:rgba(255,255,255,0.45);font-size:12px;letter-spacing:0.2em;margin-top:24px;';
+  st.children[3].style.cssText = 'margin-top:30px;width:10px;height:10px;border-radius:50%;background:#FF0000;box-shadow:0 0 18px #FF0000;animation:pulse 1.5s ease-in-out infinite;';
+
+  // add pulse keyframes
+  const style = document.createElement('style');
+  style.textContent = '@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.3;transform:scale(0.7)}}';
+  document.head.appendChild(style);
+
+  startOverlay.addEventListener('click', () => {
+    startOverlay.remove();
+    document.querySelector('a-scene').addEventListener('loaded', () => { animateCam(); });
+    if (document.querySelector('a-scene').hasLoaded) animateCam();
+    if (!halHasSpoken) {
+      halHasSpoken = true;
+      setTimeout(() => speakHAL(HAL_GREETING), 800);
+    }
+  });
+
+  document.querySelector('a-scene').addEventListener('loaded', () => {
+    if (!startOverlay.parentNode) animateCam();
+  });
+
+  document.getElementById('learnMoreBtn').addEventListener('click', () => {
+    speechSynthesis.cancel();
+    halHasSpoken = true;
+    setTimeout(() => speakHAL(HAL_GREETING), 300);
+  });
+
+  document.getElementById('closePopup').addEventListener('click', () => {
+    document.getElementById('hal-popup').style.display = 'none';
+    document.getElementById('hal-overlay').style.display = 'none';
+  });
+
+  document.getElementById('enterHAL').addEventListener('click', () => {
+    window.location.href = './sceneHall.html';
+  });
+
+  // zoom with scroll
+  let jupiterZ = -70;
+  document.addEventListener('wheel', (e) => {
+    const jupiter = document.querySelector('#jupiter');
+    jupiterZ += e.deltaY > 0 ? 10 : -10;
+    jupiterZ = Math.max(-200, Math.min(-60, jupiterZ));
+    jupiter.setAttribute('position', `-2 3.8 ${jupiterZ}`);
+  });
+
+let doorOpened = false;
+
+function checkDoor() {
+  const cam = document.querySelector('#camRig');
+  const door = document.querySelector('#doorPanel');
+
+  if (!cam || !door) {
+    requestAnimationFrame(checkDoor);
+    return;
+  }
+
+  const pos = cam.object3D.position;
+
+  if (!doorOpened && pos.x < -7) {
+    doorOpened = true;
+
+    door.setAttribute(
+      'animation',
+      'property: position; to: -12 2.5 -2; dur: 2000; easing: easeInOutQuad'
+    );
+  }
+
+  requestAnimationFrame(checkDoor);
+}
+
+checkDoor();
+
+</script>
+
+</body>
+</html>
