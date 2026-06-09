@@ -1,0 +1,55 @@
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+
+/* Talk With HAL button */
+#learnMoreBtn {
+  position: fixed;
+  bottom: 30px;
+  left: 30px;
+  z-index: 99999;
+  background: rgba(255,0,0,0.12);
+  border: 1px solid rgba(255,0,0,0.4);
+  color: #FF4444;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  padding: 12px 24px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+
+/* HAL popup */
+#hal-popup {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  background: rgba(0,0,0,0.92);
+  border: 1px solid rgba(255,0,0,0.4);
+  border-left: 3px solid #FF0000;
+  padding: 32px 40px;
+  z-index: 99999;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  min-width: 380px;
+}
+#hal-popup .hal-label { color:#FF0000; font-size:11px; letter-spacing:0.3em; margin-bottom:12px; }
+#hal-popup .hal-message { color:#fff; font-size:15px; line-height:1.8; margin-bottom:24px; }
+#hal-popup .hal-message span { color:rgba(255,255,255,0.5); font-size:12px; }
+#enterHAL { background:rgba(255,0,0,0.15); border:1px solid rgba(255,0,0,0.5); color:#FF0000; font-family:'Courier New',monospace; font-size:13px; letter-spacing:0.2em; padding:12px 28px; cursor:pointer; margin-right:12px; }
+#closePopup { background:transparent; border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.5); font-family:'Courier New',monospace; font-size:13px; letter-spacing:0.2em; padding:12px 28px; cursor:pointer; }
+#hal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99998; }
+
+/* Start overlay */
+#startOverlay {
+  position: fixed; inset: 0; z-index: 999999;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.9); cursor: pointer;
+  font-family: 'Courier New', monospace;
+}
+#startOverlay .hal-title { color:#FF0000; font-size:13px; letter-spacing:0.4em; margin-bottom:18px; }
+#startOverlay .deck-title { color:#fff; font-size:22px; letter-spacing:0.15em; margin-bottom:10px; }
+#startOverlay .click-prompt { color:rgba(255,255,255,0.45); font-size:12px; letter-spacing:0.2em; margin-top:24px; }
+#startOverlay .pulse-dot { margin-top:30px; width:10px; height:10px; border-radius:50%; background:#FF0000; box-shadow:0 0 18px #FF0000; animation:pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.7)} }
