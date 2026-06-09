@@ -1,3 +1,4 @@
+ 
  const camRig = document.querySelector('#camRig');
   const MAX_ANGLE = 45;
   let targetY = 0;

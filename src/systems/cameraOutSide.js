@@ -1,4 +1,5 @@
-  // ── MOUSE LOOK — limited horizontal only ─────────────
+
+// ── MOUSE LOOK — limited horizontal only ─────────────
   const camRig = document.querySelector('#camRig');
   const MAX_ANGLE = 40;
   let targetY = 0;
