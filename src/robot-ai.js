@@ -63,7 +63,8 @@ AFRAME.registerComponent('hal-logic', {
             this.hud.innerText = `GUIDE: "${text}"`;
         }
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.pitch = 0.9; 
+        utterance.pitch = 0.9;
+        utterance.volume = window.soundControl?.getMuted?.() ? 0 : 1;
         window.speechSynthesis.speak(utterance);
     },
 

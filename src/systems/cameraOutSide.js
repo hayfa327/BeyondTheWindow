@@ -41,7 +41,7 @@
     speech.lang = 'en-US';
     speech.rate = 0.75;
     speech.pitch = 0.55;
-    speech.volume = 1;
+    speech.volume = window.soundControl?.getMuted?.() ? 0 : 1;
     speech.onend = () => {
       if (eye) {
         eye.removeAttribute('animation');

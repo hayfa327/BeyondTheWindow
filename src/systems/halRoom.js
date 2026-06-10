@@ -38,7 +38,8 @@
       'property:emissive-intensity;from:6;to:1.2;dir:alternate;loop:true;dur:200;easing:easeInOutSine');
     speechSynthesis.cancel();
     const s = new SpeechSynthesisUtterance(text);
-    s.lang='en-US'; s.rate=0.72; s.pitch=0.5; s.volume=1;
+    s.lang='en-US'; s.rate=0.72; s.pitch=0.5;
+    s.volume = window.soundControl?.getMuted?.() ? 0 : 1;
     s.onend = () => {
       if (eye) eye.setAttribute('animation',
         'property:emissive-intensity;from:4.5;to:0.9;dir:alternate;loop:true;dur:3000;easing:easeInOutSine');
