@@ -1,4 +1,3 @@
- 
  let secs = 0;
   setInterval(() => {
     secs++;

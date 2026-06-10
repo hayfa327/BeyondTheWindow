@@ -1,4 +1,3 @@
-
 // ── MOUSE LOOK — limited horizontal only ─────────────
   const camRig = document.querySelector('#camRig');
   const MAX_ANGLE = 40;
