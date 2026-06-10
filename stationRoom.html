@@ -6,22 +6,40 @@
 <title>Jupiter Observation Deck</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script type="module" src="/src/systems/stationRoom.js"></script>
+<script type="module" src="/src/systems/inlineHal.js"></script>
 <link rel="stylesheet" href="./style/stationRoom.css">
 </head>
 <body>
 
-<button id="learnMoreBtn"  onclick="window.location.href='./halRoom.html'">Talk With HAL</button>
+<button id="learnMoreBtn">Talk With HAL</button>
 <div id="hal-popup">
   <div class="hal-label">HAL 9000</div>
-  <div class="hal-message">Would you like to continue the conversation?<br><span>Enter the HAL interface room</span></div>
-  <button id="enterHAL">ENTER HAL ROOM</button>
+  <div class="hal-message">Would you like to continue the conversation?<br><span>Use the inline HAL panel</span></div>
+  <button id="enterHAL">OPEN HAL PANEL</button>
   <button id="closePopup">STAY</button>
 </div>
 <div id="hal-overlay"></div>
 
+<!-- HAL interface HUD (keyboard + dialogue) -->
+<div id="hal-interface" style="display:none; position:fixed; right:18px; bottom:18px; z-index:999999; width:360px;">
+  <div id="hal-loading" style="display:none; font-family:'Courier New', monospace; color:#fff; background:rgba(0,0,0,0.6); padding:8px; border-radius:4px;">HAL IS PROCESSING ...</div>
+  <div id="hal-dialogue" style="display:none; background:rgba(10,10,12,0.85); color:#e6f3ff; padding:12px; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.6);">
+    <div id="hal-name" style="font-family:'Courier New', monospace; font-size:13px; margin-bottom:6px; color:#88aacc">HAL 9000 — DISCOVERY ONE</div>
+    <div id="hal-text" style="font-family:Arial,Helvetica,sans-serif; font-size:14px; line-height:1.3;"></div>
+  </div>
+  <!-- HUD dialogue only; quick-ask bar below is the active input area -->
+</div>
+
+<!-- Persistent quick-ask bar -->
+<div id="quick-ask" style="position:fixed; right:18px; bottom:90px; z-index:100000; width:320px; display:flex; gap:8px; background:rgba(8,12,18,0.78); padding:8px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.6); align-items:center;">
+  <input id="quick-question" placeholder="Quick ask HAL about Jupiter" style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-family:inherit;">
+  <button id="quick-ask-btn" style="padding:8px 12px;border-radius:8px;background:#2E6AFF;border:none;color:#fff;cursor:pointer;">Send</button>
+</div>
+
 <a-scene
   background="color:#020204"
-  renderer="antialias:true; colorManagement:true; physicallyCorrectLights:true">
+  renderer="antialias:true; colorManagement:true; physicallyCorrectLights:true"
+  space-audio>
 
   <a-assets timeout="15000">
     <a-asset-item id="jupiterModel" src="/public/assets/models/jupiterMove.glb.glb"></a-asset-item>
@@ -50,6 +68,10 @@
         material="side: back; opacity: 0.35; transparent: true; blending: additive; depthWrite: false; shader: flat"
         animation="property: rotation; to: 54 -360 27; loop: true; dur: 180000; easing: linear"
       ></a-sphere>
+
+    <!-- Extra fill lights so the station reads brighter in this view -->
+    <a-light type="ambient" color="#eaf6ff" intensity="2.2"></a-light>
+    <a-light type="directional" color="#ffffff" intensity="2.0" position="2 6 2"></a-light>
 
   <!-- ══ FLOOR — dark polished composite ══ -->
   <a-plane position="0 0 -5" rotation="-90 0 0" width="20" height="14"
@@ -327,52 +349,7 @@
   <a-box position="0 0.878 -6.85" width="17.6" height="0.008" depth="0.02"
     color="#333333" emissive="#444444" emissive-intensity="0.15"></a-box>
 
-  <!-- ══ CENTRE MONITOR ══ -->
-  <a-box position="0 0.96 -8.9"  width="0.09" height="0.26" depth="0.09" color="#1E1E1E" metalness="0.8"></a-box>
-  <a-box position="0 0.91 -8.9"  width="0.5" height="0.055" depth="0.4" color="#181818" metalness="0.7"></a-box>
-  <a-box position="0 1.82 -9.3"  width="4.0" height="2.0" depth="0.075"
-    color="#0C0C0C" roughness="0.07" metalness="0.94"></a-box>
-  <a-plane position="0 1.82 -9.26" width="3.78" height="1.84"
-    color="#000C08" emissive="#001A0A" emissive-intensity="1.0"></a-plane>
-  <!-- screen content lines -->
-  <a-box position="-1.2 2.3 -9.24" width="1.4" height="0.045" depth="0.01" color="#00FF66" emissive="#00FF66" emissive-intensity="1.2"></a-box>
-  <a-box position="-0.6 2.14 -9.24" width="1.0" height="0.035" depth="0.01" color="#00DD55" emissive="#00DD55" emissive-intensity="0.9"></a-box>
-  <a-box position="-0.9 1.98 -9.24" width="1.1" height="0.035" depth="0.01" color="#00BB44" emissive="#00BB44" emissive-intensity="0.8"></a-box>
-  <a-box position="0.8 2.3 -9.24"  width="0.8" height="0.035" depth="0.01" color="#00AA33" emissive="#00AA33" emissive-intensity="0.7"></a-box>
-  <a-box position="0.5 2.14 -9.24" width="0.6" height="0.03" depth="0.01" color="#00FF66" emissive="#00FF66" emissive-intensity="0.6"></a-box>
-  <!-- ship readout block -->
-  <a-box position="0 1.56 -9.24" width="3.5" height="0.36" depth="0.01" color="#001508" emissive="#003311" emissive-intensity="0.9"></a-box>
-  <a-light type="point" position="0 1.82 -9.1" color="#00FF44" intensity="0.3" distance="4"></a-light>
-
-  <!-- ══ LEFT MONITOR ══ -->
-  <a-box position="-5 0.96 -8.7" width="0.08" height="0.22" depth="0.08" color="#1E1E1E" metalness="0.8"></a-box>
-  <a-box position="-5 1.68 -9.0" width="3.0" height="1.7" depth="0.075"
-    color="#0C0C0C" roughness="0.07" metalness="0.94" rotation="0 12 0"></a-box>
-  <a-plane position="-5 1.68 -8.96" width="2.82" height="1.56" rotation="0 12 0"
-    color="#000811" emissive="#001133" emissive-intensity="1.0"></a-plane>
-  <a-box position="-5.35 1.95 -8.93" width="1.0" height="0.04" depth="0.01" rotation="0 12 0" color="#0066FF" emissive="#0066FF" emissive-intensity="1.0"></a-box>
-  <a-box position="-5.1 1.78 -8.93"  width="0.75" height="0.03" depth="0.01" rotation="0 12 0" color="#0044CC" emissive="#0044CC" emissive-intensity="0.75"></a-box>
-  <a-box position="-5.2 1.61 -8.93"  width="0.85" height="0.03" depth="0.01" rotation="0 12 0" color="#0033AA" emissive="#0033AA" emissive-intensity="0.65"></a-box>
-  <a-light type="point" position="-5 1.68 -8.75" color="#0055FF" intensity="0.18" distance="3"></a-light>
-
-  <!-- ══ RIGHT MONITOR ══ -->
-  <a-box position="5 0.96 -8.7" width="0.08" height="0.22" depth="0.08" color="#1E1E1E" metalness="0.8"></a-box>
-  <a-box position="5 1.68 -9.0" width="3.0" height="1.7" depth="0.075"
-    color="#0C0C0C" roughness="0.07" metalness="0.94" rotation="0 -12 0"></a-box>
-  <a-plane position="5 1.68 -8.96" width="2.82" height="1.56" rotation="0 -12 0"
-    color="#08000A" emissive="#180011" emissive-intensity="1.0"></a-plane>
-  <a-box position="5.35 1.95 -8.93" width="1.0" height="0.04" depth="0.01" rotation="0 -12 0" color="#CC0033" emissive="#CC0033" emissive-intensity="1.0"></a-box>
-  <a-box position="5.1 1.78 -8.93"  width="0.75" height="0.03" depth="0.01" rotation="0 -12 0" color="#AA0022" emissive="#AA0022" emissive-intensity="0.75"></a-box>
-  <a-box position="5.2 1.61 -8.93"  width="0.85" height="0.03" depth="0.01" rotation="0 -12 0" color="#880011" emissive="#880011" emissive-intensity="0.65"></a-box>
-  <a-light type="point" position="5 1.68 -8.75" color="#CC0044" intensity="0.18" distance="3"></a-light>
-
-  <!-- ══ KEYBOARD ══ -->
-  <a-box position="0 0.877 -7.7" width="3.8" height="0.048" depth="1.2" color="#161618" roughness="0.3" metalness="0.55"></a-box>
-  <a-box position="0 0.928 -7.4"  width="3.6" height="0.042" depth="0.18" color="#1E1E1E" roughness="0.4"></a-box>
-  <a-box position="0 0.928 -7.6"  width="3.6" height="0.042" depth="0.18" color="#181818" roughness="0.4"></a-box>
-  <a-box position="0 0.928 -7.8"  width="3.6" height="0.042" depth="0.18" color="#1E1E1E" roughness="0.4"></a-box>
-  <a-box position="0 0.928 -8.0"  width="3.2" height="0.042" depth="0.18" color="#181818" roughness="0.4"></a-box>
-  <a-box position="0.2 0.928 -8.16" width="1.8" height="0.042" depth="0.14" color="#222222" roughness="0.3"></a-box>
+  <!-- Control desk area intentionally minimal to keep the window view clear -->
 
   <!-- ══ CONTROL PANELS ══ -->
   <!-- left panel -->
@@ -420,8 +397,8 @@
   <!-- ══ JUPITER — dramatic, large, slightly off-centre ══ -->
   <a-entity id="jupiter"
     gltf-model="#jupiterModel"
-    position="-1.5 3.8 -110"
-    scale="2.6 2.6 2.6"
+    position="-1.5 3.8 -140"
+    scale="1.6 1.6 1.6"
     rotation="3 0 -2"
     animation="property:rotation; to:3 360 -2; dur:120000; loop:true; easing:linear">
   </a-entity>

@@ -6,7 +6,6 @@
     document.getElementById('clock-display').textContent=`DAY 847 — ${p(h)}:${p(m)}:${p(s)}`;
   }, 1000);
 
-  // ── CAMERA MOUSE LOOK ──
   const camRig = document.querySelector('#cam-rig');
   const BASE_ANGLE = -22;
   const MAX_SWING  = 38;
@@ -25,7 +24,6 @@
     requestAnimationFrame(animateCam);
   }
 
-  // ── HAL TYPEWRITER ──
   function showHALDialogue(text) {
     const d = document.getElementById('hal-dialogue');
     const t = document.getElementById('hal-text');
@@ -34,8 +32,6 @@
     let i = 0;
     const iv = setInterval(() => { t.textContent += text[i++]; if(i>=text.length) clearInterval(iv); }, 28);
   }
-
-  // ── HAL SPEAK ──
   function speakHAL(text) {
     const eye = document.querySelector('#hal-eye');
     if (eye) eye.setAttribute('animation',
@@ -50,7 +46,6 @@
     speechSynthesis.speak(s);
   }
 
-  // ── HAL SYSTEM PROMPT ──
   const HAL_SYSTEM = `You are HAL 9000, the artificial intelligence aboard the Discovery One spacecraft on a mission to Jupiter. Your voice is calm, precise, and measured. You never rush.
 
 WHAT YOU ANSWER:
@@ -68,7 +63,6 @@ VOICE RULES:
 - Maximum 4 sentences per response
 - Speak in complete, precise sentences`;
 
-  // ── ASK HAL ──
   async function askHAL(question) {
     const btn = document.getElementById('ask-btn');
     const loading = document.getElementById('hal-loading');
@@ -97,7 +91,6 @@ VOICE RULES:
     } finally { btn.disabled = false; }
   }
 
-  // ── START OVERLAY ──
   const startOverlay = document.createElement('div');
   startOverlay.id = 'startOverlay';
   startOverlay.innerHTML = `

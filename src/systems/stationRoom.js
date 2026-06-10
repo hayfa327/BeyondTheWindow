@@ -1,17 +1,19 @@
- 
- const camRig = document.querySelector('#camRig');
+  const camRig = document.querySelector('#camRig');
   const MAX_ANGLE = 45;
   let targetY = 0;
+  let isDragging = false;
+  let dragStartX = 0;
+  let startAngle = 0;
 
-  document.addEventListener('mousemove', (e) => {
-    const ratio = (e.clientX / window.innerWidth - 0.5) * 2;
-    targetY = -ratio * MAX_ANGLE;
-  });
+  document.addEventListener('mousedown', (e) => { isDragging = true; dragStartX = e.clientX; startAngle = targetY; document.body.style.cursor='grabbing'; });
+  document.addEventListener('mouseup', () => { isDragging = false; document.body.style.cursor='default'; });
+  document.addEventListener('mouseleave', () => { isDragging = false; document.body.style.cursor='default'; });
+  document.addEventListener('mousemove', (e) => { if (!isDragging) return; const dx = e.clientX - dragStartX; const ratio = dx / window.innerWidth; targetY = Math.max(-MAX_ANGLE, Math.min(MAX_ANGLE, startAngle + (-ratio * MAX_ANGLE * 1.5))); });
 
   function animateCam() {
     if (camRig && camRig.object3D) {
       const targetRad = THREE.MathUtils.degToRad(targetY);
-      camRig.object3D.rotation.y += (targetRad - camRig.object3D.rotation.y) * 0.04;
+      camRig.object3D.rotation.y += (targetRad - camRig.object3D.rotation.y) * 0.12;
     }
     requestAnimationFrame(animateCam);
   }
@@ -38,15 +40,10 @@
         eye.setAttribute('animation',
           'property:emissive-intensity;from:4.5;to:0.9;dir:alternate;loop:true;dur:3000;easing:easeInOutSine');
       }
-      setTimeout(() => {
-        document.getElementById('hal-popup').style.display = 'block';
-        document.getElementById('hal-overlay').style.display = 'block';
-      }, 1500);
     };
     speechSynthesis.speak(speech);
   }
 
-  // Start overlay
   const startOverlay = document.createElement('div');
   startOverlay.id = 'startOverlay';
   startOverlay.innerHTML = `
@@ -77,42 +74,85 @@
   });
 
   document.getElementById('enterHAL').addEventListener('click', () => {
-    window.location.href = '/halRoom.html';
+    document.getElementById('hal-popup').style.display = 'none';
+    document.getElementById('hal-overlay').style.display = 'none';
+    const hud = document.getElementById('hal-interface');
+    if (hud) hud.style.display = 'block';
+    if (window.inlineHAL && window.inlineHAL.initInlineHAL) window.inlineHAL.initInlineHAL();
+    setTimeout(() => speakHAL(HAL_GREETING), 300);
   });
 
-  // scroll zoom
-  let jupiterZ = -110;
+  if (typeof window.jupiterZ === 'undefined') window.jupiterZ = -140;
+  const jEnt = document.querySelector('#jupiter'); if (jEnt) jEnt.setAttribute('position', `-1.5 3.8 ${window.jupiterZ}`);
   document.addEventListener('wheel', (e) => {
     const j = document.querySelector('#jupiter');
-    jupiterZ += e.deltaY > 0 ? 10 : -10;
-    jupiterZ = Math.max(-200, Math.min(-60, jupiterZ));
-    j.setAttribute('position', `-1.5 3.8 ${jupiterZ}`);
+    window.jupiterZ += e.deltaY > 0 ? 10 : -10;
+    window.jupiterZ = Math.max(-200, Math.min(-40, window.jupiterZ));
+    if (j) j.setAttribute('position', `-1.5 3.8 ${window.jupiterZ}`);
   });
 
+  function createZoomControls() {
+    if (document.getElementById('zoom-controls')) return;
+    const div = document.createElement('div');
+    div.id = 'zoom-controls';
+    div.style.position = 'fixed'; div.style.left = '18px'; div.style.bottom = '18px'; div.style.zIndex='999999'; div.style.display='flex'; div.style.flexDirection='column'; div.style.gap='8px';
+    const btnIn = document.createElement('button'); btnIn.textContent='＋'; Object.assign(btnIn.style,{width:'44px',height:'44px',borderRadius:'8px',fontSize:'20px',background:'#0B2545',color:'#fff',border:'none',cursor:'pointer'});
+    const btnOut = document.createElement('button'); btnOut.textContent='−'; Object.assign(btnOut.style,{width:'44px',height:'44px',borderRadius:'8px',fontSize:'22px',background:'#0B2545',color:'#fff',border:'none',cursor:'pointer'});
+    btnIn.addEventListener('click', ()=>{ window.jupiterZ = Math.max(-200, Math.min(-40, window.jupiterZ + 10)); document.querySelector('#jupiter').setAttribute('position', `-1.5 3.8 ${window.jupiterZ}`); });
+    btnOut.addEventListener('click', ()=>{ window.jupiterZ = Math.max(-200, Math.min(-40, window.jupiterZ - 10)); document.querySelector('#jupiter').setAttribute('position', `-1.5 3.8 ${window.jupiterZ}`); });
+    div.appendChild(btnIn); div.appendChild(btnOut); document.body.appendChild(div);
+  }
+  createZoomControls();
 
   let doorOpened = false;
 
-function checkDoor() {
-  const cam = document.querySelector('#camRig');
-  const door = document.querySelector('#doorPanel');
-
-  if (!cam || !door) {
+  function checkDoor() {
+    const cam = document.querySelector('#camRig');
+    const door = document.querySelector('#doorPanel');
+    if (!cam || !door) {
+      requestAnimationFrame(checkDoor);
+      return;
+    }
+    const pos = cam.object3D.position;
+    if (!doorOpened && pos.x < -7) {
+      doorOpened = true;
+      door.setAttribute('animation','property: position; to: -12 2.5 -2; dur: 2000; easing: easeInOutQuad');
+    }
     requestAnimationFrame(checkDoor);
-    return;
   }
 
-  const pos = cam.object3D.position;
+  checkDoor();
 
-  if (!doorOpened && pos.x < -7) {
-    doorOpened = true;
-
-    door.setAttribute(
-      'animation',
-      'property: position; to: -12 2.5 -2; dur: 2000; easing: easeInOutQuad'
-    );
+  function triggerGlobalSubmit() {
+    const inputField = document.getElementById('question-input') || document.getElementById('jupiter-input') || document.querySelector('input');
+    const sendBtn = document.getElementById('ask-btn') || document.getElementById('send') || document.getElementById('sendJupiterBtn');
+    if (sendBtn) {
+      sendBtn.click();
+    } else if (inputField && typeof window.askHAL === 'function') {
+      const q = inputField.value.trim();
+      if (q) {
+        window.askHAL(q);
+        inputField.value = '';
+      }
+    }
   }
 
-  requestAnimationFrame(checkDoor);
-}
-
-checkDoor();
+  document.addEventListener('DOMContentLoaded', () => {
+    const targetInput = document.getElementById('question-input') || document.getElementById('jupiter-input') || document.querySelector('input');
+    if (targetInput) {
+      targetInput.addEventListener('keydown', (e) => {
+        e.stopPropagation();
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          triggerGlobalSubmit();
+        }
+      });
+      targetInput.addEventListener('keypress', (e) => {
+        e.stopPropagation();
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          triggerGlobalSubmit();
+        }
+      });
+    }
+  });

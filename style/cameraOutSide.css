@@ -3,9 +3,11 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background:
 /* Talk With HAL button */
 #learnMoreBtn {
   position: fixed;
-  bottom: 30px;
+  bottom: 130px;
   left: 30px;
-  z-index: 99999;
+  z-index: 1000010;
+  pointer-events: auto !important;
+  transform: translateZ(0);
   background: rgba(255,0,0,0.12);
   border: 1px solid rgba(255,0,0,0.4);
   color: #FF4444;

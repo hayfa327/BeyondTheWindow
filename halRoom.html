@@ -57,6 +57,10 @@
     animation="property:rotation; to:54 -360 27; loop:true; dur:200000; easing:linear">
   </a-sphere>
 
+  <!-- Additional fill lighting so the station reads brighter and clearer -->
+  <a-light type="ambient" color="#e6f3ff" intensity="1.6"></a-light>
+  <a-light type="directional" color="#ffffff" intensity="1.4" position="2 6 2"></a-light>
+
   <!--
     ROOM: Width=20, Depth=14, Height=5.5  (matches reference blueprint)
     Camera at Z=0 facing -Z
@@ -169,26 +173,26 @@
     color="#151515" roughness="0.3" metalness="0.8"></a-box>
   <!-- tube 1 -->
   <a-box position="-1.5 5.45 -5" width="0.28" height="0.04" depth="11.8"
-    color="#FFFDF0" emissive="#FFFDF0" emissive-intensity="0.75"></a-box>
+    color="#FFFDF0" emissive="#FFFDF0" emissive-intensity="1.2"></a-box>
   <!-- housing 2 -->
   <a-box position="1.5 5.48 -5" width="0.45" height="0.055" depth="12"
     color="#151515" roughness="0.3" metalness="0.8"></a-box>
+  <!-- tube 1 -->
+  <a-box position="-1.5 5.45 -5" width="0.28" height="0.04" depth="11.8"
+    color="#FFFDF0" emissive="#FFFDF0" emissive-intensity="1.6"></a-box>
   <!-- tube 2 -->
   <a-box position="1.5 5.45 -5" width="0.28" height="0.04" depth="11.8"
-    color="#FFFDF0" emissive="#FFFDF0" emissive-intensity="0.75"></a-box>
-
-  <!-- subtle floor glow pools under strips (no cones!) -->
-  <a-circle position="-1.5 0.01 -3" rotation="-90 0 0" radius="1.8"
+    color="#FFFDF0" emissive="#FFFDF0" emissive-intensity="1.6"></a-box>
     color="#FFFBE8" opacity="0.055" transparent="true"
     material="shader:flat; depthWrite:false; blending:additive"></a-circle>
   <a-circle position="1.5 0.01 -3" rotation="-90 0 0" radius="1.8"
-    color="#FFFBE8" opacity="0.055" transparent="true"
+    color="#FFFBE8" opacity="0.09" transparent="true"
     material="shader:flat; depthWrite:false; blending:additive"></a-circle>
   <a-circle position="-1.5 0.01 -8" rotation="-90 0 0" radius="2.0"
-    color="#FFFBE8" opacity="0.045" transparent="true"
+    color="#FFFBE8" opacity="0.08" transparent="true"
     material="shader:flat; depthWrite:false; blending:additive"></a-circle>
   <a-circle position="1.5 0.01 -8" rotation="-90 0 0" radius="2.0"
-    color="#FFFBE8" opacity="0.045" transparent="true"
+    color="#FFFBE8" opacity="0.08" transparent="true"
     material="shader:flat; depthWrite:false; blending:additive"></a-circle>
 
   <!-- ══ LEFT WALL PANEL DETAILS ══ -->
@@ -196,9 +200,9 @@
     color="#131316" roughness="0.5" metalness="0.5"></a-box>
   <a-box position="-9.76 3.8 -4" rotation="0 90 0" width="2.7" height="2.1" depth="0.055"
     color="#0A0A0C" roughness="0.85"></a-box>
-  <a-sphere position="-9.74 4.55 -3.5" radius="0.03" color="#00FF44" emissive="#00FF44" emissive-intensity="2.5"
-    animation="property:emissive-intensity;from:2.5;to:0.3;dir:alternate;loop:true;dur:1800"></a-sphere>
-  <a-sphere position="-9.74 4.55 -4.0" radius="0.03" color="#00FF44" emissive="#00FF44" emissive-intensity="2.5"
+    <a-circle position="1.5 0.01 -8" rotation="-90 0 0" radius="2.0"
+      color="#FFFBE8" opacity="0.10" transparent="true"
+      material="shader:flat; depthWrite:false; blending:additive"></a-circle>
     animation="property:emissive-intensity;from:2.5;to:0.3;dir:alternate;loop:true;dur:2600"></a-sphere>
   <a-sphere position="-9.74 4.55 -4.5" radius="0.03" color="#FFB800" emissive="#FFB800" emissive-intensity="2.2"
     animation="property:emissive-intensity;from:2.2;to:0.2;dir:alternate;loop:true;dur:3400"></a-sphere>
@@ -342,52 +346,7 @@
   <a-box position="0 0.878 -6.85" width="17.6" height="0.008" depth="0.02"
     color="#333333" emissive="#444444" emissive-intensity="0.15"></a-box>
 
-  <!-- ══ CENTRE MONITOR ══ -->
-  <a-box position="0 0.96 -8.9"  width="0.09" height="0.26" depth="0.09" color="#1E1E1E" metalness="0.8"></a-box>
-  <a-box position="0 0.91 -8.9"  width="0.5" height="0.055" depth="0.4" color="#181818" metalness="0.7"></a-box>
-  <a-box position="0 1.82 -9.3"  width="4.0" height="2.0" depth="0.075"
-    color="#0C0C0C" roughness="0.07" metalness="0.94"></a-box>
-  <a-plane position="0 1.82 -9.26" width="3.78" height="1.84"
-    color="#000C08" emissive="#001A0A" emissive-intensity="1.0"></a-plane>
-  <!-- screen content lines -->
-  <a-box position="-1.2 2.3 -9.24" width="1.4" height="0.045" depth="0.01" color="#00FF66" emissive="#00FF66" emissive-intensity="1.2"></a-box>
-  <a-box position="-0.6 2.14 -9.24" width="1.0" height="0.035" depth="0.01" color="#00DD55" emissive="#00DD55" emissive-intensity="0.9"></a-box>
-  <a-box position="-0.9 1.98 -9.24" width="1.1" height="0.035" depth="0.01" color="#00BB44" emissive="#00BB44" emissive-intensity="0.8"></a-box>
-  <a-box position="0.8 2.3 -9.24"  width="0.8" height="0.035" depth="0.01" color="#00AA33" emissive="#00AA33" emissive-intensity="0.7"></a-box>
-  <a-box position="0.5 2.14 -9.24" width="0.6" height="0.03" depth="0.01" color="#00FF66" emissive="#00FF66" emissive-intensity="0.6"></a-box>
-  <!-- ship readout block -->
-  <a-box position="0 1.56 -9.24" width="3.5" height="0.36" depth="0.01" color="#001508" emissive="#003311" emissive-intensity="0.9"></a-box>
-  <a-light type="point" position="0 1.82 -9.1" color="#00FF44" intensity="0.3" distance="4"></a-light>
-
-  <!-- ══ LEFT MONITOR ══ -->
-  <a-box position="-5 0.96 -8.7" width="0.08" height="0.22" depth="0.08" color="#1E1E1E" metalness="0.8"></a-box>
-  <a-box position="-5 1.68 -9.0" width="3.0" height="1.7" depth="0.075"
-    color="#0C0C0C" roughness="0.07" metalness="0.94" rotation="0 12 0"></a-box>
-  <a-plane position="-5 1.68 -8.96" width="2.82" height="1.56" rotation="0 12 0"
-    color="#000811" emissive="#001133" emissive-intensity="1.0"></a-plane>
-  <a-box position="-5.35 1.95 -8.93" width="1.0" height="0.04" depth="0.01" rotation="0 12 0" color="#0066FF" emissive="#0066FF" emissive-intensity="1.0"></a-box>
-  <a-box position="-5.1 1.78 -8.93"  width="0.75" height="0.03" depth="0.01" rotation="0 12 0" color="#0044CC" emissive="#0044CC" emissive-intensity="0.75"></a-box>
-  <a-box position="-5.2 1.61 -8.93"  width="0.85" height="0.03" depth="0.01" rotation="0 12 0" color="#0033AA" emissive="#0033AA" emissive-intensity="0.65"></a-box>
-  <a-light type="point" position="-5 1.68 -8.75" color="#0055FF" intensity="0.18" distance="3"></a-light>
-
-  <!-- ══ RIGHT MONITOR ══ -->
-  <a-box position="5 0.96 -8.7" width="0.08" height="0.22" depth="0.08" color="#1E1E1E" metalness="0.8"></a-box>
-  <a-box position="5 1.68 -9.0" width="3.0" height="1.7" depth="0.075"
-    color="#0C0C0C" roughness="0.07" metalness="0.94" rotation="0 -12 0"></a-box>
-  <a-plane position="5 1.68 -8.96" width="2.82" height="1.56" rotation="0 -12 0"
-    color="#08000A" emissive="#180011" emissive-intensity="1.0"></a-plane>
-  <a-box position="5.35 1.95 -8.93" width="1.0" height="0.04" depth="0.01" rotation="0 -12 0" color="#CC0033" emissive="#CC0033" emissive-intensity="1.0"></a-box>
-  <a-box position="5.1 1.78 -8.93"  width="0.75" height="0.03" depth="0.01" rotation="0 -12 0" color="#AA0022" emissive="#AA0022" emissive-intensity="0.75"></a-box>
-  <a-box position="5.2 1.61 -8.93"  width="0.85" height="0.03" depth="0.01" rotation="0 -12 0" color="#880011" emissive="#880011" emissive-intensity="0.65"></a-box>
-  <a-light type="point" position="5 1.68 -8.75" color="#CC0044" intensity="0.18" distance="3"></a-light>
-
-  <!-- ══ KEYBOARD ══ -->
-  <a-box position="0 0.877 -7.7" width="3.8" height="0.048" depth="1.2" color="#161618" roughness="0.3" metalness="0.55"></a-box>
-  <a-box position="0 0.928 -7.4"  width="3.6" height="0.042" depth="0.18" color="#1E1E1E" roughness="0.4"></a-box>
-  <a-box position="0 0.928 -7.6"  width="3.6" height="0.042" depth="0.18" color="#181818" roughness="0.4"></a-box>
-  <a-box position="0 0.928 -7.8"  width="3.6" height="0.042" depth="0.18" color="#1E1E1E" roughness="0.4"></a-box>
-  <a-box position="0 0.928 -8.0"  width="3.2" height="0.042" depth="0.18" color="#181818" roughness="0.4"></a-box>
-  <a-box position="0.2 0.928 -8.16" width="1.8" height="0.042" depth="0.14" color="#222222" roughness="0.3"></a-box>
+  <!-- Monitors and keyboard removed to open the view through the window -->
 
   <!-- ══ CONTROL PANELS ══ -->
   <!-- left panel -->
@@ -538,5 +497,4 @@
 </a-scene>
 
 </body>
-</html>
 </html>

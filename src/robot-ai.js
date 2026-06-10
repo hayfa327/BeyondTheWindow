@@ -10,6 +10,7 @@ AFRAME.registerComponent('hal-logic', {
     init: function () {
         this.hud = document.querySelector('#ai-status');
         this.setupVoice();
+        this.setupKeyboardInput();
     },
 
     setupVoice: function() {
@@ -28,6 +29,25 @@ AFRAME.registerComponent('hal-logic', {
         recognition.start();
     },
 
+    setupKeyboardInput: function() {
+        const targetInput = document.getElementById('question-input') || document.getElementById('jupiter-input') || document.querySelector('input');
+        if (targetInput) {
+            const executeSubmit = (e) => {
+                e.stopPropagation();
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const q = targetInput.value.trim();
+                    if (q) {
+                        this.processInput(q.toLowerCase());
+                        targetInput.value = '';
+                    }
+                }
+            };
+            targetInput.addEventListener('keydown', executeSubmit);
+            targetInput.addEventListener('keypress', executeSubmit);
+        }
+    },
+
     processInput: function(text) {
         let response = jupiterData.default;
         if (text.includes("hello") || text.includes("hi")) response = jupiterData.hello;
@@ -39,7 +59,9 @@ AFRAME.registerComponent('hal-logic', {
     },
 
     speak: function(text) {
-        this.hud.innerText = `GUIDE: "${text}"`;
+        if (this.hud) {
+            this.hud.innerText = `GUIDE: "${text}"`;
+        }
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.pitch = 0.9; 
         window.speechSynthesis.speak(utterance);

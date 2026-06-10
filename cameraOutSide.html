@@ -9,23 +9,42 @@
 
  
   <script type="module" src="/src/systems/cameraOutSide.js"></script>
+  <script type="module" src="/src/systems/inlineHal.js"></script>
   <link rel="stylesheet" href="./style/cameraOutSide.css">
 </head>
 <body>
 
- <button id="learnMoreBtn"  onclick="window.location.href='./halRoom.html'">Talk With HAL</button>
+ <button id="learnMoreBtn">Talk With HAL</button>
 
+<!-- Inline HAL popup + overlay -->
 <div id="hal-popup">
   <div class="hal-label">HAL 9000</div>
-  <div class="hal-message">Would you like to continue the conversation?<br><span>Enter the HAL interface room</span></div>
-  <button id="enterHAL">ENTER HAL ROOM</button>
+  <div class="hal-message">Would you like to continue the conversation?<br><span>Use the inline HAL panel</span></div>
+  <button id="enterHAL">OPEN HAL PANEL</button>
   <button id="closePopup">STAY</button>
 </div>
 <div id="hal-overlay"></div>
 
+<!-- HAL interface HUD (keyboard + dialogue) -->
+<div id="hal-interface" style="display:none; position:fixed; right:18px; bottom:18px; z-index:999999; width:360px;">
+  <div id="hal-loading" style="display:none; font-family:'Courier New', monospace; color:#fff; background:rgba(0,0,0,0.6); padding:8px; border-radius:4px;">HAL IS PROCESSING ...</div>
+  <div id="hal-dialogue" style="display:none; background:rgba(10,10,12,0.85); color:#e6f3ff; padding:12px; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.6);">
+    <div id="hal-name" style="font-family:'Courier New', monospace; font-size:13px; margin-bottom:6px; color:#88aacc">HAL 9000 — DISCOVERY ONE</div>
+    <div id="hal-text" style="font-family:Arial,Helvetica,sans-serif; font-size:14px; line-height:1.3;"></div>
+  </div>
+  <!-- HUD dialogue only; quick-ask bar below is the active input area -->
+</div>
+
+<!-- Persistent quick-ask bar -->
+<div id="quick-ask" style="position:fixed; right:18px; bottom:90px; z-index:100000; width:320px; display:flex; gap:8px; background:rgba(8,12,18,0.78); padding:8px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.6); align-items:center;">
+  <input id="quick-question" placeholder="Quick ask HAL about Jupiter" style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-family:inherit;">
+  <button id="quick-ask-btn" style="padding:8px 12px;border-radius:8px;background:#2E6AFF;border:none;color:#fff;cursor:pointer;">Send</button>
+</div>
+
 <a-scene
   background="color:#050508"
-  renderer="antialias:true; colorManagement:true; physicallyCorrectLights:true">
+  renderer="antialias:true; colorManagement:true; physicallyCorrectLights:true"
+  space-audio>
 
   <a-assets>
     <a-asset-item id="jupiterModel" src="/public/assets/models/jupiterMove.glb.glb"></a-asset-item>
@@ -274,53 +293,7 @@
   <a-box position="0 0.835 -6.05" width="16.6" height="0.018" depth="0.04"
     color="#FF2200" emissive="#FF2200" emissive-intensity="0.5" opacity="0.7" transparent="true"></a-box>
 
-  <!-- ══ CENTRE MONITOR ══ -->
-  <a-box position="0 0.96 -7.8" width="0.08" height="0.25" depth="0.08" color="#222222" metalness="0.7"></a-box>
-  <a-box position="0 0.9 -7.8"  width="0.45" height="0.05" depth="0.35" color="#1A1A1A" metalness="0.6"></a-box>
-  <!-- screen -->
-  <a-box position="0 1.7 -8.1" width="3.2" height="1.8" depth="0.07"
-    color="#111111" roughness="0.1" metalness="0.9"></a-box>
-  <a-plane position="0 1.7 -8.06" width="3.0" height="1.65"
-    color="#000C08" emissive="#001A0A" emissive-intensity="1"></a-plane>
-  <!-- screen content -->
-  <a-box position="-0.8 2.15 -8.04" width="1.0" height="0.04" depth="0.01" color="#00FF66" emissive="#00FF66" emissive-intensity="1"></a-box>
-  <a-box position="-0.5 2.02 -8.04" width="0.7" height="0.03" depth="0.01" color="#00FF66" emissive="#00FF66" emissive-intensity="0.7"></a-box>
-  <a-box position="-0.7 1.89 -8.04" width="0.8" height="0.03" depth="0.01" color="#00FF66" emissive="#00FF66" emissive-intensity="0.7"></a-box>
-  <a-box position="0.5 2.15 -8.04" width="0.6" height="0.03" depth="0.01" color="#00BB55" emissive="#00BB55" emissive-intensity="0.6"></a-box>
-  <!-- ship diagram outline -->
-  <a-box position="0 1.5 -8.04" width="2.6" height="0.3" depth="0.01" color="#001A08" emissive="#003311" emissive-intensity="0.8"></a-box>
-  <a-light type="point" position="0 1.7 -7.9" color="#00FF44" intensity="0.2" distance="3"></a-light>
-
-  <!-- ══ LEFT MONITOR ══ -->
-  <a-box position="-4.5 0.96 -7.6" width="0.07" height="0.2" depth="0.07" color="#222222" metalness="0.7"></a-box>
-  <a-box position="-4.5 1.55 -7.8" width="2.4" height="1.4" depth="0.07"
-    color="#111111" roughness="0.1" metalness="0.9" rotation="0 10 0"></a-box>
-  <a-plane position="-4.5 1.55 -7.76" width="2.2" height="1.25" rotation="0 10 0"
-    color="#000811" emissive="#001133" emissive-intensity="0.9"></a-plane>
-  <!-- content lines -->
-  <a-box position="-4.8 1.8 -7.74" width="0.8" height="0.03" depth="0.01" rotation="0 10 0" color="#0055FF" emissive="#0055FF" emissive-intensity="0.8"></a-box>
-  <a-box position="-4.5 1.65 -7.74" width="0.6" height="0.025" depth="0.01" rotation="0 10 0" color="#0044CC" emissive="#0044CC" emissive-intensity="0.6"></a-box>
-  <a-box position="-4.6 1.5 -7.74" width="0.7" height="0.025" depth="0.01" rotation="0 10 0" color="#0033AA" emissive="#0033AA" emissive-intensity="0.5"></a-box>
-  <a-light type="point" position="-4.5 1.55 -7.6" color="#0055FF" intensity="0.12" distance="2"></a-light>
-
-  <!-- ══ RIGHT MONITOR ══ -->
-  <a-box position="4.5 0.96 -7.6" width="0.07" height="0.2" depth="0.07" color="#222222" metalness="0.7"></a-box>
-  <a-box position="4.5 1.55 -7.8" width="2.4" height="1.4" depth="0.07"
-    color="#111111" roughness="0.1" metalness="0.9" rotation="0 -10 0"></a-box>
-  <a-plane position="4.5 1.55 -7.76" width="2.2" height="1.25" rotation="0 -10 0"
-    color="#0A0008" emissive="#1A0011" emissive-intensity="0.9"></a-plane>
-  <a-box position="4.8 1.8 -7.74" width="0.8" height="0.03" depth="0.01" rotation="0 -10 0" color="#AA0033" emissive="#AA0033" emissive-intensity="0.8"></a-box>
-  <a-box position="4.5 1.65 -7.74" width="0.6" height="0.025" depth="0.01" rotation="0 -10 0" color="#880022" emissive="#880022" emissive-intensity="0.6"></a-box>
-  <a-light type="point" position="4.5 1.55 -7.6" color="#CC0044" intensity="0.12" distance="2"></a-light>
-
-  <!-- ══ KEYBOARD ══ -->
-  <a-box position="0 0.875 -6.8" width="3.2" height="0.045" depth="1.1"
-    color="#1A1A1A" roughness="0.3" metalness="0.5"></a-box>
-  <a-box position="0 0.925 -6.5"  width="3.0" height="0.045" depth="0.16" color="#242424" roughness="0.4" metalness="0.4"></a-box>
-  <a-box position="0 0.925 -6.68" width="3.0" height="0.045" depth="0.16" color="#1E1E1E" roughness="0.4" metalness="0.4"></a-box>
-  <a-box position="0 0.925 -6.86" width="3.0" height="0.045" depth="0.16" color="#242424" roughness="0.4" metalness="0.4"></a-box>
-  <a-box position="0 0.925 -7.04" width="2.7" height="0.045" depth="0.16" color="#1E1E1E" roughness="0.4" metalness="0.4"></a-box>
-  <a-box position="0.2 0.925 -7.18" width="1.4" height="0.045" depth="0.12" color="#2A2A2A" roughness="0.3" metalness="0.5"></a-box>
+  <!-- Control desk area intentionally minimal to keep the window view clear -->
 
   <!-- ══ CONTROL PANELS ON DESK — like the photo ══ -->
   <!-- far left panel -->
@@ -384,8 +357,8 @@
   <!-- ══ JUPITER — large, filling window like the photo ══ -->
   <a-entity id="jupiter"
     gltf-model="#jupiterModel"
-    position="-3 3.2 -80"
-    scale="8 8 8"
+    position="-3 3.2 -140"
+    scale="2 2 2"
     rotation="3 0 -2"
     animation="property:rotation; to:3 360 -2; dur:120000; loop:true; easing:linear">
   </a-entity>
@@ -410,16 +383,16 @@
  
   <!-- ══ LIGHTING ══════════════════════════════════════════════ -->
 
-  <!-- ambient — very dark blue space mood -->
-  <a-light type="ambient" color="#111822" intensity="0.8"></a-light>
+  <!-- ambient — daytime brightened -->
+  <a-light type="ambient" color="#ffffff" intensity="1.8"></a-light>
 
-  <!-- MAIN ceiling strips — warm white, soft -->
-  <a-light type="point" position="-1.5 5.3 -3" color="#FFFDF0" intensity="2.5" distance="16" decay="1.2"></a-light>
-  <a-light type="point" position="1.5 5.3 -3"  color="#FFFDF0" intensity="2.5" distance="16" decay="1.2"></a-light>
+  <!-- MAIN ceiling strips — warm white, stronger for day feel -->
+  <a-light type="point" position="-1.5 5.3 -3" color="#FFFDF0" intensity="5.2" distance="28" decay="1.0"></a-light>
+  <a-light type="point" position="1.5 5.3 -3"  color="#FFFDF0" intensity="5.2" distance="28" decay="1.0"></a-light>
 
-  <!-- Cold space light through window — blue white -->
+  <!-- Cold space light through window — brighter daylight blend -->
   <a-light type="point" position="0 2.78 -9.5"
-    color="#99CCFF" intensity="4.0" distance="20" decay="1.2"></a-light>
+    color="#CCE8FF" intensity="12.0" distance="36" decay="1.0"></a-light>
 
   <!-- Jupiter warm orange glow — subtle -->
   <a-light type="point" position="-2 3.8 -11"
@@ -435,7 +408,7 @@
     animation="property:intensity;from:1.8;to:0.3;dir:alternate;loop:true;dur:3000;easing:easeInOutSine">
   </a-light>
 
-  <!-- desk monitor fill — green -->
+  <!-- desk monitor fill -->
   <a-light type="point" position="0 1.5 -7.5" color="#003300" intensity="1.5" distance="6" decay="1.5"></a-light>
 
   <!-- floor reflection fill — very subtle -->
