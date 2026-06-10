@@ -57,10 +57,13 @@ AFRAME.registerComponent('space-audio', {
   init() {
     this.ctx = null;
     this.humNodes = [];
+    this.output = null;
+    this.muted = window.soundControl?.getMuted?.() ?? false;
 
     // Start audio only after a user gesture (browser requirement)
     document.addEventListener('click', () => this._startHum(), { once: true });
     document.addEventListener('keydown', () => this._startHum(), { once: true });
+    window.addEventListener('sound-control-changed', (evt) => this.setMuted(evt.detail.muted));
   },
 
   _startHum() {
@@ -68,6 +71,9 @@ AFRAME.registerComponent('space-audio', {
     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
 
     const ctx = this.ctx;
+    this.output = ctx.createGain();
+    this.output.gain.setValueAtTime(this.muted ? 0 : 1, ctx.currentTime);
+    this.output.connect(ctx.destination);
 
     // Layer 1: deep bass drone at 60 Hz
     const bass = ctx.createOscillator();
@@ -86,7 +92,7 @@ AFRAME.registerComponent('space-audio', {
 
     bass.connect(gain);
     mid.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(this.output);
 
     bass.start();
     mid.start();
@@ -94,10 +100,31 @@ AFRAME.registerComponent('space-audio', {
     this.humNodes = [bass, mid, gain];
   },
 
+  setMuted(muted) {
+    this.muted = !!muted;
+    if (!this.ctx) {
+      if (this.muted) {
+        this._startHum();
+      }
+      return;
+    }
+
+    const gainTarget = this.muted ? 0 : 1;
+    this.output.gain.cancelScheduledValues(this.ctx.currentTime);
+    this.output.gain.setTargetAtTime(gainTarget, this.ctx.currentTime, 0.01);
+  },
+
+  toggleMute() {
+    this.setMuted(!this.muted);
+  },
+
   // Short sci-fi beep at 880 Hz — called by robot AI
   playBeep() {
     if (!this.ctx) {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      this.output = this.ctx.createGain();
+      this.output.gain.setValueAtTime(this.muted ? 0 : 1, this.ctx.currentTime);
+      this.output.connect(this.ctx.destination);
     }
     const ctx = this.ctx;
 
@@ -110,7 +137,7 @@ AFRAME.registerComponent('space-audio', {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(this.output);
 
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.3);

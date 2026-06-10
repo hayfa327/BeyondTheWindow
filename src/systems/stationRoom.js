@@ -32,7 +32,8 @@
         'property:emissive-intensity;from:6;to:1.2;dir:alternate;loop:true;dur:200;easing:easeInOutSine');
     }
     const speech = new SpeechSynthesisUtterance(text);
-    speech.lang = 'en-US'; speech.rate = 0.75; speech.pitch = 0.55; speech.volume = 1;
+    speech.lang = 'en-US'; speech.rate = 0.75; speech.pitch = 0.55;
+    speech.volume = window.soundControl?.getMuted?.() ? 0 : 1;
     speech.onend = () => {
       if (eye) {
         eye.setAttribute('animation',
