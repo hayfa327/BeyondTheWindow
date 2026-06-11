@@ -54,7 +54,9 @@ document.addEventListener('DOMContentLoaded', () => {
     updateToggleLabel(evt.detail.muted);
     updateSceneAudioState();
     if (evt.detail.muted) {
-      window.speechSynthesis.cancel();
+      window.speechSynthesis.pause();
+    } else {
+      window.speechSynthesis.resume();
     }
   }
 

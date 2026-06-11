@@ -1,0 +1,11 @@
+/* Start overlay — show the real space background image with a readable dark tint */
+#startOverlay {
+  background:
+    linear-gradient(rgba(0, 0, 10, 0.62), rgba(0, 0, 10, 0.62)),
+    url('/assets/textures/new%20image%20of%20space.png') center / cover no-repeat !important;
+}
+
+/* Keep the mute/unmute button above the start overlay so users can always toggle */
+#audio-toggle {
+  z-index: 1000001;
+}

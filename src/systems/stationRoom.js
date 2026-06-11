@@ -34,8 +34,7 @@
         'property:emissive-intensity;from:6;to:1.2;dir:alternate;loop:true;dur:200;easing:easeInOutSine');
     }
     const speech = new SpeechSynthesisUtterance(text);
-    speech.lang = 'en-US'; speech.rate = 0.75; speech.pitch = 0.55;
-    speech.volume = window.soundControl?.getMuted?.() ? 0 : 1;
+    speech.lang = 'en-US'; speech.rate = 0.75; speech.pitch = 0.55; speech.volume = 1;
     speech.onend = () => {
       if (eye) {
         eye.setAttribute('animation',
@@ -43,6 +42,7 @@
       }
     };
     speechSynthesis.speak(speech);
+    if (window.soundControl?.getMuted?.()) setTimeout(() => speechSynthesis.pause(), 50);
   }
 
   const startOverlay = document.createElement('div');
@@ -84,9 +84,9 @@
   });
 
   if (typeof window.jupiterZ === 'undefined') window.jupiterZ = -140;
-  const jEnt = document.querySelector('#jupiter'); if (jEnt) jEnt.setAttribute('position', `-1.5 3.8 ${window.jupiterZ}`);
+  const jEnt = document.querySelector('#jupiter-system'); if (jEnt) jEnt.setAttribute('position', `-1.5 3.8 ${window.jupiterZ}`);
   document.addEventListener('wheel', (e) => {
-    const j = document.querySelector('#jupiter');
+    const j = document.querySelector('#jupiter-system');
     window.jupiterZ += e.deltaY > 0 ? 10 : -10;
     window.jupiterZ = Math.max(-200, Math.min(-40, window.jupiterZ));
     if (j) j.setAttribute('position', `-1.5 3.8 ${window.jupiterZ}`);
@@ -99,8 +99,8 @@
     div.style.position = 'fixed'; div.style.left = '18px'; div.style.bottom = '18px'; div.style.zIndex='999999'; div.style.display='flex'; div.style.flexDirection='column'; div.style.gap='8px';
     const btnIn = document.createElement('button'); btnIn.textContent='＋'; Object.assign(btnIn.style,{width:'44px',height:'44px',borderRadius:'8px',fontSize:'20px',background:'#0B2545',color:'#fff',border:'none',cursor:'pointer'});
     const btnOut = document.createElement('button'); btnOut.textContent='−'; Object.assign(btnOut.style,{width:'44px',height:'44px',borderRadius:'8px',fontSize:'22px',background:'#0B2545',color:'#fff',border:'none',cursor:'pointer'});
-    btnIn.addEventListener('click', ()=>{ window.jupiterZ = Math.max(-200, Math.min(-40, window.jupiterZ + 10)); document.querySelector('#jupiter').setAttribute('position', `-1.5 3.8 ${window.jupiterZ}`); });
-    btnOut.addEventListener('click', ()=>{ window.jupiterZ = Math.max(-200, Math.min(-40, window.jupiterZ - 10)); document.querySelector('#jupiter').setAttribute('position', `-1.5 3.8 ${window.jupiterZ}`); });
+    btnIn.addEventListener('click', ()=>{ window.jupiterZ = Math.max(-200, Math.min(-40, window.jupiterZ + 10)); document.querySelector('#jupiter-system').setAttribute('position', `-1.5 3.8 ${window.jupiterZ}`); });
+    btnOut.addEventListener('click', ()=>{ window.jupiterZ = Math.max(-200, Math.min(-40, window.jupiterZ - 10)); document.querySelector('#jupiter-system').setAttribute('position', `-1.5 3.8 ${window.jupiterZ}`); });
     div.appendChild(btnIn); div.appendChild(btnOut); document.body.appendChild(div);
   }
   createZoomControls();

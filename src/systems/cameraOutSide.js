@@ -41,7 +41,7 @@
     speech.lang = 'en-US';
     speech.rate = 0.75;
     speech.pitch = 0.55;
-    speech.volume = window.soundControl?.getMuted?.() ? 0 : 1;
+    speech.volume = 1;
     speech.onend = () => {
       if (eye) {
         eye.removeAttribute('animation');
@@ -51,6 +51,7 @@
       }
     };
     speechSynthesis.speak(speech);
+    if (window.soundControl?.getMuted?.()) setTimeout(() => speechSynthesis.pause(), 50);
   }
 
   const HAL_GREETING = "I have studied Jupiter for 847 days. I still find its scale difficult to comprehend.";
@@ -67,7 +68,7 @@
     position: 'fixed', inset: '0', zIndex: '999999',
     display: 'flex', flexDirection: 'column',
     alignItems: 'center', justifyContent: 'center',
-    background: 'rgba(0,0,0,0.9)', cursor: 'pointer',
+    background: 'rgba(0,0,10,0.55)', cursor: 'pointer',
     fontFamily: "'Courier New', monospace"
   });
   startOverlay.querySelector('.hal-title') && null;
@@ -118,12 +119,12 @@
   });
 
   if (typeof window.jupiterZ === 'undefined') window.jupiterZ = -140;
-  const jinit = document.querySelector('#jupiter'); if (jinit) jinit.setAttribute('position', `-2 3.8 ${window.jupiterZ}`);
+  const jinit = document.querySelector('#jupiter-system'); if (jinit) jinit.setAttribute('position', `-3 3.2 ${window.jupiterZ}`);
   document.addEventListener('wheel', (e) => {
-    const jupiter = document.querySelector('#jupiter');
+    const jupiter = document.querySelector('#jupiter-system');
     window.jupiterZ += e.deltaY > 0 ? 10 : -10;
     window.jupiterZ = Math.max(-200, Math.min(-40, window.jupiterZ));
-    if (jupiter) jupiter.setAttribute('position', `-2 3.8 ${window.jupiterZ}`);
+    if (jupiter) jupiter.setAttribute('position', `-3 3.2 ${window.jupiterZ}`);
   });
 
   function createZoomControls() {
@@ -147,8 +148,8 @@
     btnOut.title = 'Zoom Out (push Jupiter away)';
     Object.assign(btnOut.style, {width:'44px',height:'44px',borderRadius:'8px',fontSize:'22px',background:'#0B2545',color:'#fff',border:'none',cursor:'pointer'});
 
-    btnIn.addEventListener('click', () => { window.jupiterZ = Math.max(-200, Math.min(-40, window.jupiterZ + 10)); document.querySelector('#jupiter').setAttribute('position', `-2 3.8 ${window.jupiterZ}`); });
-    btnOut.addEventListener('click', () => { window.jupiterZ = Math.max(-200, Math.min(-40, window.jupiterZ - 10)); document.querySelector('#jupiter').setAttribute('position', `-2 3.8 ${window.jupiterZ}`); });
+    btnIn.addEventListener('click', () => { window.jupiterZ = Math.max(-200, Math.min(-40, window.jupiterZ + 10)); document.querySelector('#jupiter-system').setAttribute('position', `-3 3.2 ${window.jupiterZ}`); });
+    btnOut.addEventListener('click', () => { window.jupiterZ = Math.max(-200, Math.min(-40, window.jupiterZ - 10)); document.querySelector('#jupiter-system').setAttribute('position', `-3 3.2 ${window.jupiterZ}`); });
 
     div.appendChild(btnIn); div.appendChild(btnOut);
     document.body.appendChild(div);
