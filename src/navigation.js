@@ -1,3 +1,24 @@
+// Makes a gltf-model planet self-emissive so intense scene lighting doesn't
+// wash out the texture. Only applied to meshes that have a base color texture
+// (skips transparent ring/atmosphere materials).
+AFRAME.registerComponent('gltf-emissive-fix', {
+  init() {
+    this.el.addEventListener('model-loaded', () => {
+      const mesh = this.el.getObject3D('mesh');
+      if (!mesh) return;
+      mesh.traverse(node => {
+        if (!node.isMesh || !node.material || !node.material.map) return;
+        const mat = node.material;
+        mat.emissive.set(1, 1, 1);
+        mat.emissiveMap = mat.map;
+        mat.emissiveIntensity = 1.0;
+        mat.map = null;
+        mat.needsUpdate = true;
+      });
+    });
+  }
+});
+
 // Arrow-key locomotion + VR controller thumbstick locomotion
 // Both components share the same bounds/floor-lock schema so they
 // always enforce the same room limits regardless of input source.
