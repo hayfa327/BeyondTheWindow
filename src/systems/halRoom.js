@@ -34,16 +34,22 @@
   }
   function speakHAL(text) {
     const eye = document.querySelector('#hal-eye');
+    const spaceAudio = document.querySelector('a-scene')?.components?.['space-audio'];
     if (eye) eye.setAttribute('animation',
       'property:emissive-intensity;from:6;to:1.2;dir:alternate;loop:true;dur:200;easing:easeInOutSine');
+    if (spaceAudio?.playBeep) spaceAudio.playBeep();
     speechSynthesis.cancel();
     const s = new SpeechSynthesisUtterance(text);
     s.lang='en-US'; s.rate=0.72; s.pitch=0.5; s.volume=1;
     s.onend = () => {
+      spaceAudio?.setComputerLevel?.(1);
       if (eye) eye.setAttribute('animation',
         'property:emissive-intensity;from:4.5;to:0.9;dir:alternate;loop:true;dur:3000;easing:easeInOutSine');
     };
+    window.registerSpeech?.(s, text);
+    spaceAudio?.setComputerLevel?.(0.2);
     speechSynthesis.speak(s);
+    if (window.soundControl?.getMuted?.()) speechSynthesis.cancel();
   }
 
   const HAL_SYSTEM = `You are HAL 9000, the artificial intelligence aboard the Discovery One spacecraft on a mission to Jupiter. Your voice is calm, precise, and measured. You never rush.
@@ -102,6 +108,13 @@ VOICE RULES:
 
   startOverlay.addEventListener('click', () => {
     startOverlay.remove();
+    // Ensure space hum starts on user gesture
+    const scene = document.querySelector('a-scene');
+    const startHum = () => {
+      try { scene?.components?.['space-audio']?._startHum?.(); } catch (e) {}
+    };
+    startHum();
+    setTimeout(startHum, 50);
     animateCam();
     speechSynthesis.cancel();
     const greeting = "Good morning, Dr. Bowman. I am ready to assist you. You may ask me anything about Jupiter, its moons, or our mission. I will answer as precisely as I can.";

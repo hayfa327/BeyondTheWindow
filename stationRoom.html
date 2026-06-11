@@ -5,9 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jupiter Observation Deck</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script type="module" src="/src/celestial.js"></script>
 <script type="module" src="/src/systems/stationRoom.js"></script>
 <script type="module" src="/src/systems/inlineHal.js"></script>
 <link rel="stylesheet" href="./style/stationRoom.css">
+<link rel="stylesheet" href="/style/sound-control.css" />
+<link rel="stylesheet" href="/style/sound-zoom-Bg.css" />
 </head>
 <body>
 
@@ -39,11 +42,11 @@
 <a-scene
   background="color:#020204"
   renderer="antialias:true; colorManagement:true; physicallyCorrectLights:true"
-  space-audio>
+  space-audio="hum: true">
 
   <a-assets timeout="15000">
     <a-asset-item id="jupiterModel" src="/public/assets/models/jupiterMove.glb.glb"></a-asset-item>
-    <img id="nebulaTex" src="/assets/textures/beautiful-view-stars-night-sky.jpg" crossorigin="anonymous" alt="space sky">
+    <img id="nebulaTex" src="/assets/textures/new%20image%20of%20space.png" crossorigin="anonymous" alt="space sky">
   </a-assets>
 
   <!-- ══ SKY — two layered spheres ══ -->
@@ -53,21 +56,10 @@
         segments-width="64"
         segments-height="64"
         src="#nebulaTex"
-        material="side: back; opacity: 0.75; transparent: true; blending: additive; depthWrite: false; shader: flat"
+        material="side: back; opacity: 1; transparent: false; blending: normal; depthWrite: false; shader: flat"
         animation="property: rotation; to: 5 360 2; loop: true; dur: 120000; easing: linear"
       ></a-sphere>
 
-      <!-- Sphere 2: same image, tilted + opposite rotation = parallax depth -->
-      <a-sphere
-        id="nebula2"
-        radius="750"
-        segments-width="64"
-        segments-height="64"
-        src="#nebulaTex"
-        rotation="54 0 27"
-        material="side: back; opacity: 0.35; transparent: true; blending: additive; depthWrite: false; shader: flat"
-        animation="property: rotation; to: 54 -360 27; loop: true; dur: 180000; easing: linear"
-      ></a-sphere>
 
     <!-- Extra fill lights so the station reads brighter in this view -->
     <a-light type="ambient" color="#eaf6ff" intensity="2.2"></a-light>
@@ -394,35 +386,32 @@
   <a-box position="-0.6 0.72 -2.0" width="0.09" height="0.055" depth="0.9" color="#1A1A1C" roughness="0.5"></a-box>
   <a-box position="0.6 0.72 -2.0"  width="0.09" height="0.055" depth="0.9" color="#1A1A1C" roughness="0.5"></a-box>
 
-  <!-- ══ JUPITER — dramatic, large, slightly off-centre ══ -->
-  <a-entity id="jupiter"
-    gltf-model="#jupiterModel"
-    position="-1.5 3.8 -140"
-    scale="1.6 1.6 1.6"
-    rotation="3 0 -2"
-    animation="property:rotation; to:3 360 -2; dur:120000; loop:true; easing:linear">
-  </a-entity>
-
-  <!-- ══ GALILEAN MOONS ══ -->
-  <a-entity position="-1.5 3.8 -110"
-    animation="property:rotation; to:0 360 0; dur:18000; loop:true; easing:linear">
-    <a-sphere position="8.5 0 0" radius="0.25" color="#CC9944"
-      material="roughness:0.8; emissive:#774422; emissive-intensity:0.38"></a-sphere>
-  </a-entity>
-  <a-entity position="-1.5 3.8 -110"
-    animation="property:rotation; to:0 360 0; dur:32000; loop:true; easing:linear">
-    <a-sphere position="12 0.5 0" radius="0.20" color="#DDEEFF"
-      material="roughness:0.3; emissive:#8899BB; emissive-intensity:0.30"></a-sphere>
-  </a-entity>
-  <a-entity position="-1.5 3.8 -110"
-    animation="property:rotation; to:0 360 0; dur:55000; loop:true; easing:linear">
-    <a-sphere position="16 -0.8 0" radius="0.32" color="#998877"
-      material="roughness:0.9; emissive:#554433; emissive-intensity:0.24"></a-sphere>
-  </a-entity>
-  <a-entity position="-1.5 3.8 -110"
-    animation="property:rotation; to:0 360 0; dur:90000; loop:true; easing:linear">
-    <a-sphere position="21 1.0 0" radius="0.27" color="#443322"
-      material="roughness:1.0; emissive:#1A100A; emissive-intensity:0.18"></a-sphere>
+  <!-- ══ JUPITER SYSTEM — Jupiter + moons as one unit (scroll zooms all together) ══ -->
+  <a-entity id="jupiter-system" position="-1.5 3.8 -140">
+    <a-entity id="jupiter"
+      gltf-model="#jupiterModel"
+      position="0 0 0"
+      scale="1.6 1.6 1.6"
+      rotation="3 0 -2"
+      animation="property:rotation; to:3 360 -2; dur:120000; loop:true; easing:linear">
+    </a-entity>
+    <!-- Galilean moons orbit the system centre (Jupiter) -->
+    <a-entity animation="property:rotation; to:0 360 0; dur:18000; loop:true; easing:linear">
+      <a-sphere position="8.5 0 0" radius="0.25" color="#CC9944"
+        material="roughness:0.8; emissive:#774422; emissive-intensity:0.38"></a-sphere>
+    </a-entity>
+    <a-entity animation="property:rotation; to:0 360 0; dur:32000; loop:true; easing:linear">
+      <a-sphere position="12 0.5 0" radius="0.20" color="#DDEEFF"
+        material="roughness:0.3; emissive:#8899BB; emissive-intensity:0.30"></a-sphere>
+    </a-entity>
+    <a-entity animation="property:rotation; to:0 360 0; dur:55000; loop:true; easing:linear">
+      <a-sphere position="16 -0.8 0" radius="0.32" color="#998877"
+        material="roughness:0.9; emissive:#554433; emissive-intensity:0.24"></a-sphere>
+    </a-entity>
+    <a-entity animation="property:rotation; to:0 360 0; dur:90000; loop:true; easing:linear">
+      <a-sphere position="21 1.0 0" radius="0.27" color="#443322"
+        material="roughness:1.0; emissive:#1A100A; emissive-intensity:0.18"></a-sphere>
+    </a-entity>
   </a-entity>
 
   <!-- 3D star field -->
@@ -498,5 +487,7 @@
   </a-entity>
 
 </a-scene>
+<script type="module" src="/src/sound-control.js"></script>
+<script type="module" src="/src/sound-zoom-Bg.js"></script>
 </body>
 </html>

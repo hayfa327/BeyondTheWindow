@@ -4,80 +4,70 @@
 //   moon-orbit="radius: 3; dur: 15000"   → attach to Jupiter entity
 //   space-audio                           → attach to <a-scene>
 
-// Slowly rotates a planet around its Y axis
-// dur = full rotation time in ms (higher = slower)
-AFRAME.registerComponent('planet-rotation', {
-  schema: {
-    dur: { type: 'number', default: 20000 }
-  },
-  init() {
-    this.el.setAttribute('animation', {
-      property: 'rotation',
-      to: '0 360 0',
-      loop: true,
-      dur: this.data.dur,
-      easing: 'linear'
-    });
-  }
-});
-
-// Creates a moon that orbits around the parent entity
-// radius = orbit distance, dur = full orbit time in ms
-AFRAME.registerComponent('moon-orbit', {
-  schema: {
-    radius: { type: 'number', default: 3    },
-    dur:    { type: 'number', default: 15000 },
-    size:   { type: 'number', default: 0.2  },
-    color:  { type: 'color',  default: '#aaaaaa' }
-  },
-  init() {
-    const pivot = document.createElement('a-entity');
-    pivot.setAttribute('animation', {
-      property: 'rotation',
-      to: '0 360 0',
-      loop: true,
-      dur: this.data.dur,
-      easing: 'linear'
-    });
-
-    const moon = document.createElement('a-sphere');
-    moon.setAttribute('position', `${this.data.radius} 0 0`);
-    moon.setAttribute('radius', this.data.size);
-    moon.setAttribute('color', this.data.color);
-
-    pivot.appendChild(moon);
-    this.el.appendChild(pivot);
-  }
-});
-
-// Ambient space hum + beep — generated via Web Audio API (no files needed)
-// Usage: <a-scene space-audio>
-// Robot AI triggers beep: document.querySelector('a-scene').components['space-audio'].playBeep()
 AFRAME.registerComponent('space-audio', {
+  schema: { hum: { type: 'boolean', default: true } },
+
   init() {
     this.ctx = null;
     this.humNodes = [];
+    this.output = null;
+    this.computerLoop = null;
+    this.muted = window.soundControl?.getMuted?.() ?? false;
 
-    // Start audio only after a user gesture (browser requirement)
-    document.addEventListener('click', () => this._startHum(), { once: true });
-    document.addEventListener('keydown', () => this._startHum(), { once: true });
+    // Defer creation until a user gesture (browser autoplay policy)
+    if (this.data.hum) {
+      document.addEventListener('click', () => this._startHum(), { once: true });
+      document.addEventListener('keydown', () => this._startHum(), { once: true });
+      document.addEventListener('touchstart', () => this._startHum(), { once: true });
+    } else {
+      document.addEventListener('click', () => this._createCtx(), { once: true });
+      document.addEventListener('keydown', () => this._createCtx(), { once: true });
+      document.addEventListener('touchstart', () => this._createCtx(), { once: true });
+    }
+
+    window.addEventListener('sound-control-changed', (evt) => this.setMuted(evt.detail.muted));
+  },
+
+  // Creates AudioContext + master gain without any oscillators (used for beep-only rooms)
+  _createCtx() {
+    if (this.ctx) return;
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = this.ctx;
+    this.output = ctx.createGain();
+    this.output.gain.setValueAtTime(this.muted ? 0 : 1, ctx.currentTime);
+    this.output.connect(ctx.destination);
+    // Notify UI that audio context has been created (one-time)
+    try { window.dispatchEvent(new CustomEvent('space-audio-initialized')); } catch (e) {}
+    if (ctx.state === 'suspended') {
+      const unlock = () => ctx.resume();
+      document.addEventListener('click', unlock, { once: true });
+      document.addEventListener('keydown', unlock, { once: true });
+      document.addEventListener('touchstart', unlock, { once: true });
+    }
   },
 
   _startHum() {
-    if (this.ctx) return;
-    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
 
+    this._createCtx();
+
+    if (!this.ctx) return;
+
+    if (this.ctx.state === 'suspended') {
+        this.ctx.resume();
+    }
+
+    if (this.humNodes.length) return;
     const ctx = this.ctx;
 
     // Layer 1: deep bass drone at 60 Hz
     const bass = ctx.createOscillator();
     bass.type = 'sine';
-    bass.frequency.value = 60;
+    bass.frequency.value = 48;
 
     // Layer 2: mid hum at 120 Hz, slightly detuned for texture
     const mid = ctx.createOscillator();
     mid.type = 'sine';
-    mid.frequency.value = 121.5;
+    mid.frequency.value = 97;
 
     // Slow volume fade-in over 4 seconds
     const gain = ctx.createGain();
@@ -86,38 +76,105 @@ AFRAME.registerComponent('space-audio', {
 
     bass.connect(gain);
     mid.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(this.output);
 
     bass.start();
     mid.start();
 
     this.humNodes = [bass, mid, gain];
+    console.log('[space-audio] Hum started. Muted:', this.muted, 'Output gain:', this.output.gain.value);
   },
 
-  // Short sci-fi beep at 880 Hz — called by robot AI
-  playBeep() {
+  setMuted(muted) {
+    this.muted = !!muted;
     if (!this.ctx) {
-      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      // Create audio context on first mute/unmute action so user gesture initializes audio
+      this._createCtx();
     }
-    const ctx = this.ctx;
 
-    const osc = ctx.createOscillator();
+    const gainTarget = this.muted ? 0 : 1;
+    try {
+      this.output.gain.cancelScheduledValues(this.ctx.currentTime);
+      this.output.gain.setTargetAtTime(gainTarget, this.ctx.currentTime, 0.01);
+    } catch (e) {
+      // ignore if ctx/out not ready
+    }
+  },
+
+  toggleMute() {
+    this.setMuted(!this.muted);
+  },
+
+  // Stop the ambient hum but keep AudioContext open for beep-only pages
+  stopHum() {
+    if (!this.humNodes || this.humNodes.length === 0) return;
+    try {
+      this.humNodes.forEach(n => {
+        if (n.stop) n.stop();
+        try { n.disconnect(); } catch (e) {}
+      });
+    } catch (e) {}
+    this.humNodes = [];
+  },
+
+  // Starts random quiet beeps every ~2.5 s — background computer ambience
+  startComputerLoop() {
+    if (this.computerLoop) return;
+    this.computerLoop = setInterval(() => {
+      if (this.muted) return;
+      if (Math.random() < 0.5) this.playSoftComputerBeep();
+    }, 2500);
+  },
+
+  stopComputerLoop() {
+    clearInterval(this.computerLoop);
+    this.computerLoop = null;
+  },
+
+  // Very quiet random-frequency blip (600–1400 Hz, 80 ms, gain 0.02)
+  playSoftComputerBeep() {
+    if (!this.ctx) this._createCtx();
+    if (!this.output) return;
+    const osc  = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.value = 880;
+    osc.frequency.value = 600 + Math.random() * 800;
+    gain.gain.value = 0.02;
+    osc.connect(gain);
+    gain.connect(this.output);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.08);
+  },
 
+  // Duck computer ambience while HAL speaks (0.2), restore when done (1)
+  setComputerLevel(level) {
+    if (!this.output || !this.ctx) return;
+    this.output.gain.cancelScheduledValues(this.ctx.currentTime);
+    this.output.gain.setTargetAtTime(level, this.ctx.currentTime, 0.2);
+  },
+
+  // Cinematic downward-sweep beep before HAL speaks (NASA / Kubrick style)
+  playBeep() {
+    if (!this.ctx) this._createCtx();
+    const ctx  = this.ctx;
+    const osc  = ctx.createOscillator();
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.4, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(1400, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(700, ctx.currentTime + 0.15);
+
+    gain.gain.setValueAtTime(0.05, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.3);
+    gain.connect(this.output);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.18);
   },
 
   remove() {
-    this.humNodes.forEach(n => { try { n.disconnect(); } catch(e) {} });
+    this.stopHum();
     if (this.ctx) this.ctx.close();
   }
 });

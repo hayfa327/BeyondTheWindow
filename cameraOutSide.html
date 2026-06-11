@@ -8,9 +8,12 @@
   
 
  
+  <script type="module" src="/src/celestial.js"></script>
   <script type="module" src="/src/systems/cameraOutSide.js"></script>
   <script type="module" src="/src/systems/inlineHal.js"></script>
   <link rel="stylesheet" href="./style/cameraOutSide.css">
+  <link rel="stylesheet" href="/style/sound-control.css" />
+  <link rel="stylesheet" href="/style/sound-zoom-Bg.css" />
 </head>
 <body>
 
@@ -44,11 +47,11 @@
 <a-scene
   background="color:#050508"
   renderer="antialias:true; colorManagement:true; physicallyCorrectLights:true"
-  space-audio>
+  space-audio="hum: false">
 
   <a-assets>
     <a-asset-item id="jupiterModel" src="/public/assets/models/jupiterMove.glb.glb"></a-asset-item>
-      <img id="nebulaTex" src="/assets/textures/beautiful-view-stars-night-sky.jpg" crossorigin="anonymous" alt="Beautiful view of stars and night sky" />
+      <img id="nebulaTex" src="/assets/textures/new%20image%20of%20space.png" crossorigin="anonymous" alt="Beautiful view of stars and night sky" />
   </a-assets>
 
         <a-sphere
@@ -57,21 +60,10 @@
         segments-width="64"
         segments-height="64"
         src="#nebulaTex"
-        material="side: back; opacity: 0.75; transparent: true; blending: additive; depthWrite: false; shader: flat"
+        material="side: back; opacity: 1; transparent: false; blending: normal; depthWrite: false; shader: flat"
         animation="property: rotation; to: 5 360 2; loop: true; dur: 120000; easing: linear"
       ></a-sphere>
 
-      <!-- Sphere 2: same image, tilted + opposite rotation = parallax depth -->
-      <a-sphere
-        id="nebula2"
-        radius="750"
-        segments-width="64"
-        segments-height="64"
-        src="#nebulaTex"
-        rotation="54 0 27"
-        material="side: back; opacity: 0.35; transparent: true; blending: additive; depthWrite: false; shader: flat"
-        animation="property: rotation; to: 54 -360 27; loop: true; dur: 180000; easing: linear"
-      ></a-sphere>
 
   <!-- FLOOR — dark almost black, slight reflection -->
   <a-plane position="0 0 -5" rotation="-90 0 0" width="20" height="14"
@@ -354,30 +346,28 @@
   <a-box position="-0.58 0.72 -2.4" width="0.09" height="0.05" depth="0.85" color="#1E1E1E" roughness="0.5" metalness="0.3"></a-box>
   <a-box position="0.58 0.72 -2.4"  width="0.09" height="0.05" depth="0.85" color="#1E1E1E" roughness="0.5" metalness="0.3"></a-box>
 
-  <!-- ══ JUPITER — large, filling window like the photo ══ -->
-  <a-entity id="jupiter"
-    gltf-model="#jupiterModel"
-    position="-3 3.2 -140"
-    scale="2 2 2"
-    rotation="3 0 -2"
-    animation="property:rotation; to:3 360 -2; dur:120000; loop:true; easing:linear">
-  </a-entity>
-
-  <!-- ══ MOONS — orbiting Jupiter ══ -->
-  <a-entity position="-2 3.8 -120"
-    animation="property:rotation; to:0 360 0; dur:18000; loop:true; easing:linear">
-    <a-sphere position="7 0 0" radius="0.22"
-      color="#CC9944" emissive="#885522" emissive-intensity="0.3" roughness="0.8"></a-sphere>
-  </a-entity>
-  <a-entity position="-2 3.8 -120"
-    animation="property:rotation; to:0 360 0; dur:32000; loop:true; easing:linear">
-    <a-sphere position="10 0.5 0" radius="0.18"
-      color="#DDEEFF" emissive="#8899AA" emissive-intensity="0.25" roughness="0.3"></a-sphere>
-  </a-entity>
-  <a-entity position="-2 3.8 -120"
-    animation="property:rotation; to:0 360 0; dur:55000; loop:true; easing:linear">
-    <a-sphere position="14 -0.8 0" radius="0.3"
-      color="#998877" emissive="#554433" emissive-intensity="0.2" roughness="0.9"></a-sphere>
+  <!-- ══ JUPITER SYSTEM — Jupiter + moons as one unit (scroll zooms all together) ══ -->
+  <a-entity id="jupiter-system" position="-3 3.2 -140">
+    <a-entity id="jupiter"
+      gltf-model="#jupiterModel"
+      position="0 0 0"
+      scale="2 2 2"
+      rotation="3 0 -2"
+      animation="property:rotation; to:3 360 -2; dur:120000; loop:true; easing:linear">
+    </a-entity>
+    <!-- Galilean moons orbit the system centre (Jupiter) -->
+    <a-entity animation="property:rotation; to:0 360 0; dur:18000; loop:true; easing:linear">
+      <a-sphere position="7 0 0" radius="0.22"
+        color="#CC9944" emissive="#885522" emissive-intensity="0.3" roughness="0.8"></a-sphere>
+    </a-entity>
+    <a-entity animation="property:rotation; to:0 360 0; dur:32000; loop:true; easing:linear">
+      <a-sphere position="10 0.5 0" radius="0.18"
+        color="#DDEEFF" emissive="#8899AA" emissive-intensity="0.25" roughness="0.3"></a-sphere>
+    </a-entity>
+    <a-entity animation="property:rotation; to:0 360 0; dur:55000; loop:true; easing:linear">
+      <a-sphere position="14 -0.8 0" radius="0.3"
+        color="#998877" emissive="#554433" emissive-intensity="0.2" roughness="0.9"></a-sphere>
+    </a-entity>
   </a-entity>
 
  
@@ -430,7 +420,7 @@
   </a-entity>
 
 </a-scene>
- 
-
+<script type="module" src="/src/sound-control.js"></script>
+<script type="module" src="/src/sound-zoom-Bg.js"></script>
 </body>
 </html>

@@ -25,6 +25,7 @@
 
     <!-- Robot AI -->
     <script type="module" src="/src/robot-ai.js"></script>
+    <link rel="stylesheet" href="/style/sound-control.css" />
 
   </head>
   <body>
@@ -39,7 +40,7 @@
 
       <!-- ── ASSETS ─────────────────────────────────────────────────────── -->
       <a-assets>
-        <img id="nebulaTex" src="/assets/textures/beautiful-view-stars-night-sky.jpg" crossorigin="anonymous" />
+        <img id="nebulaTex" src="/assets/textures/new%20image%20of%20space.png" crossorigin="anonymous" />
 
         <!-- Add your models here -->
         <!-- <a-asset-item id="robotModel" src="/assets/models/robot.glb"></a-asset-item> -->
@@ -58,17 +59,6 @@
         animation="property: rotation; to: 5 360 2; loop: true; dur: 120000; easing: linear"
       ></a-sphere>
 
-      <!-- Sphere 2: same image, tilted + opposite rotation = parallax depth -->
-      <a-sphere
-        id="nebula2"
-        radius="750"
-        segments-width="64"
-        segments-height="64"
-        src="#nebulaTex"
-        rotation="54 0 27"
-        material="side: back; opacity: 0.35; transparent: true; blending: additive; depthWrite: false; shader: flat"
-        animation="property: rotation; to: 54 -360 27; loop: true; dur: 180000; easing: linear"
-      ></a-sphere>
 
       <!-- ── LIGHTING ───────────────────────────────────────────────────── -->
       <a-light type="ambient"      color="#0d1a3a" intensity="2"></a-light>
@@ -95,6 +85,8 @@
       </a-entity>
 
     </a-scene>
+
+    <script type="module" src="/src/sound-control.js"></script>
 
   </body>
 </html>

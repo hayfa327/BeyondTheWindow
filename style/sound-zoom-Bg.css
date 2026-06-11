@@ -1,0 +1,28 @@
+/* ── START OVERLAY — full-brightness space image, no dark tint ── */
+#startOverlay {
+  background:
+    url('/assets/textures/new%20image%20of%20space.png') center / cover no-repeat !important;
+}
+
+/* ── WELCOME DIALOGUE BOX ── */
+.welcome-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 56px 80px;
+  background: rgba(2, 6, 18, 0.80);
+  border: 1px solid rgba(210, 35, 35, 0.55);
+  border-radius: 10px;
+  box-shadow:
+    0 0 90px rgba(180, 0, 0, 0.22),
+    0 8px 40px rgba(0, 0, 0, 0.85),
+    inset 0 0 60px rgba(0, 0, 30, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* ── MUTE BUTTON — always above the overlay ── */
+#audio-toggle {
+  z-index: 1000001;
+}

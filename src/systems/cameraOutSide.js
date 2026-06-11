@@ -32,17 +32,20 @@
 
   function speakHAL(text) {
     const eye = document.querySelector('#hal-eye');
+    const spaceAudio = document.querySelector('a-scene')?.components?.['space-audio'];
     if (eye) {
       eye.setAttribute('color', '#FF5555');
       eye.setAttribute('animation__talk', 'property: scale; from:1 1 1; to:1.25 1.25 1.25; dir:alternate; loop:true; dur:220');
       eye.setAttribute('animation', 'property:emissive-intensity;from:4;to:1;dir:alternate;loop:true;dur:250;easing:easeInOutSine');
     }
+    speechSynthesis.cancel();
     const speech = new SpeechSynthesisUtterance(text);
     speech.lang = 'en-US';
     speech.rate = 0.75;
     speech.pitch = 0.55;
     speech.volume = 1;
     speech.onend = () => {
+      spaceAudio?.setComputerLevel?.(1);
       if (eye) {
         eye.removeAttribute('animation');
         eye.removeAttribute('animation__talk');
@@ -50,7 +53,10 @@
         eye.setAttribute('animation', 'property:emissive-intensity;from:3;to:0.7;dir:alternate;loop:true;dur:3000;easing:easeInOutSine');
       }
     };
+    window.registerSpeech?.(speech, text);
+    spaceAudio?.setComputerLevel?.(0.2);
     speechSynthesis.speak(speech);
+    if (window.soundControl?.getMuted?.()) speechSynthesis.cancel();
   }
 
   const HAL_GREETING = "I have studied Jupiter for 847 days. I still find its scale difficult to comprehend.";
@@ -58,16 +64,18 @@
   const startOverlay = document.createElement('div');
   startOverlay.id = 'startOverlay';
   startOverlay.innerHTML = `
-    <div class="hal-title">HAL 9000</div>
-    <div class="deck-title">JUPITER OBSERVATION DECK</div>
-    <div class="click-prompt">CLICK ANYWHERE TO BEGIN</div>
-    <div class="pulse-dot"></div>`;
+    <div class="welcome-box">
+      <div class="hal-title">HAL 9000</div>
+      <div class="deck-title">JUPITER OBSERVATION DECK</div>
+      <div class="click-prompt">CLICK ANYWHERE TO BEGIN</div>
+      <div class="pulse-dot"></div>
+    </div>`;
 
   Object.assign(startOverlay.style, {
     position: 'fixed', inset: '0', zIndex: '999999',
     display: 'flex', flexDirection: 'column',
     alignItems: 'center', justifyContent: 'center',
-    background: 'rgba(0,0,0,0.9)', cursor: 'pointer',
+    cursor: 'pointer',
     fontFamily: "'Courier New', monospace"
   });
   startOverlay.querySelector('.hal-title') && null;
@@ -84,7 +92,23 @@
   document.head.appendChild(style);
 
   startOverlay.addEventListener('click', () => {
+    console.log('[cameraOutSide] Overlay clicked!');
     startOverlay.remove();
+    // Ensure space hum starts (some browsers eat the first click before component attaches)
+    const scene = document.querySelector('a-scene');
+    console.log('[cameraOutSide] Scene:', scene, 'Components:', scene?.components);
+    const startHum = () => {
+      console.log('[cameraOutSide] Calling _startHum()');
+      try { 
+        const comp = scene?.components?.['space-audio'];
+        console.log('[cameraOutSide] space-audio component:', comp);
+        comp?._startHum?.(); 
+      } catch (e) {
+        console.error('[cameraOutSide] Error calling _startHum():', e);
+      }
+    };
+    startHum();
+    setTimeout(startHum, 50);
     document.querySelector('a-scene').addEventListener('loaded', () => { animateCam(); });
     if (document.querySelector('a-scene').hasLoaded) animateCam();
     if (!halHasSpoken) {
@@ -118,12 +142,12 @@
   });
 
   if (typeof window.jupiterZ === 'undefined') window.jupiterZ = -140;
-  const jinit = document.querySelector('#jupiter'); if (jinit) jinit.setAttribute('position', `-2 3.8 ${window.jupiterZ}`);
+  const jinit = document.querySelector('#jupiter-system'); if (jinit) jinit.setAttribute('position', `-3 3.2 ${window.jupiterZ}`);
   document.addEventListener('wheel', (e) => {
-    const jupiter = document.querySelector('#jupiter');
+    const jupiter = document.querySelector('#jupiter-system');
     window.jupiterZ += e.deltaY > 0 ? 10 : -10;
     window.jupiterZ = Math.max(-200, Math.min(-40, window.jupiterZ));
-    if (jupiter) jupiter.setAttribute('position', `-2 3.8 ${window.jupiterZ}`);
+    if (jupiter) jupiter.setAttribute('position', `-3 3.2 ${window.jupiterZ}`);
   });
 
   function createZoomControls() {
@@ -147,8 +171,8 @@
     btnOut.title = 'Zoom Out (push Jupiter away)';
     Object.assign(btnOut.style, {width:'44px',height:'44px',borderRadius:'8px',fontSize:'22px',background:'#0B2545',color:'#fff',border:'none',cursor:'pointer'});
 
-    btnIn.addEventListener('click', () => { window.jupiterZ = Math.max(-200, Math.min(-40, window.jupiterZ + 10)); document.querySelector('#jupiter').setAttribute('position', `-2 3.8 ${window.jupiterZ}`); });
-    btnOut.addEventListener('click', () => { window.jupiterZ = Math.max(-200, Math.min(-40, window.jupiterZ - 10)); document.querySelector('#jupiter').setAttribute('position', `-2 3.8 ${window.jupiterZ}`); });
+    btnIn.addEventListener('click', () => { window.jupiterZ = Math.max(-200, Math.min(-40, window.jupiterZ + 10)); document.querySelector('#jupiter-system').setAttribute('position', `-3 3.2 ${window.jupiterZ}`); });
+    btnOut.addEventListener('click', () => { window.jupiterZ = Math.max(-200, Math.min(-40, window.jupiterZ - 10)); document.querySelector('#jupiter-system').setAttribute('position', `-3 3.2 ${window.jupiterZ}`); });
 
     div.appendChild(btnIn); div.appendChild(btnOut);
     document.body.appendChild(div);
