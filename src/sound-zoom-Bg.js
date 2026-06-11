@@ -6,20 +6,37 @@
 function unlockAudio() {
   const comp = document.querySelector('a-scene')?.components?.['space-audio'];
   if (comp?.ctx?.state === 'suspended') comp.ctx.resume();
-  // Also try _startHum in case init hasn't fired yet
-  if (comp?._startHum) comp._startHum();
+  if (comp && !comp.ctx) {
+    if (comp.data?.hum !== false) comp._startHum?.();
+    else comp._createCtx?.();
+  }
 }
 document.addEventListener('click',      unlockAudio, { once: true });
 document.addEventListener('keydown',    unlockAudio, { once: true });
 document.addEventListener('touchstart', unlockAudio, { once: true });
 
 // ── BACKGROUND ZOOM ──────────────────────────────────────────────────────────
-// When Jupiter comes closer the sky texture zooms in (repeat shrinks → fills more of view).
-// jupiterZ range: -200 (far) to -40 (close)
-document.addEventListener('wheel', () => {
+// Anchored at default Z=-140 → repeat=1 1 (fully zoomed out / normal view).
+// As Jupiter approaches (Z→-40), sky zooms in (repeat shrinks → 0.45).
+// At far (Z→-200), repeat stays clamped at 1.0 (no further zoom-out needed).
+function updateBg() {
   const sky = document.querySelector('#nebula1');
   if (!sky || typeof window.jupiterZ === 'undefined') return;
-  const t = (window.jupiterZ - (-200)) / (-40 - (-200)); // 0 = far, 1 = close
-  const repeat = (1.0 - t * 0.55).toFixed(3);            // 1.0 far → 0.45 close
+  const t = Math.max(0, (window.jupiterZ - (-140)) / (-40 - (-140)));
+  const repeat = Math.max(0.45, 1.0 - t * 0.55).toFixed(3);
   sky.setAttribute('material', 'repeat', `${repeat} ${repeat}`);
-});
+}
+
+// Update BG on scroll wheel and zoom button clicks
+document.addEventListener('wheel', updateBg);
+document.addEventListener('click', updateBg);
+
+// Initialize BG repeat once the scene is ready
+const scene = document.querySelector('a-scene');
+if (scene) {
+  if (scene.hasLoaded) {
+    updateBg();
+  } else {
+    scene.addEventListener('loaded', updateBg, { once: true });
+  }
+}

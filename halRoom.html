@@ -39,7 +39,7 @@
 <a-scene
   background="color:#020204"
   renderer="antialias:true; colorManagement:true; physicallyCorrectLights:true"
-  space-audio>
+  space-audio="hum: false">
 
   <a-assets timeout="15000">
     <a-asset-item id="jupiterModel" src="/public/assets/models/jupiterMove.glb.glb"></a-asset-item>
@@ -49,7 +49,7 @@
   <!-- SKY -->
   <a-sphere radius="500" segments-width="64" segments-height="64"
     src="#nebulaTex"
-    material="side:back; opacity:0.85; transparent:true; shader:flat"
+    material="side:back; opacity:1; transparent:false; shader:flat"
     animation="property:rotation; to:5 360 2; loop:true; dur:150000; easing:linear">
   </a-sphere>
 

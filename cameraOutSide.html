@@ -47,7 +47,7 @@
 <a-scene
   background="color:#050508"
   renderer="antialias:true; colorManagement:true; physicallyCorrectLights:true"
-  space-audio>
+  space-audio="hum: false">
 
   <a-assets>
     <a-asset-item id="jupiterModel" src="/public/assets/models/jupiterMove.glb.glb"></a-asset-item>
@@ -60,7 +60,7 @@
         segments-width="64"
         segments-height="64"
         src="#nebulaTex"
-        material="side: back; opacity: 0.75; transparent: true; blending: additive; depthWrite: false; shader: flat"
+        material="side: back; opacity: 1; transparent: false; blending: normal; depthWrite: false; shader: flat"
         animation="property: rotation; to: 5 360 2; loop: true; dur: 120000; easing: linear"
       ></a-sphere>
 

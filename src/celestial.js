@@ -51,28 +51,46 @@ AFRAME.registerComponent('moon-orbit', {
 });
 
 // Ambient space hum + beep — generated via Web Audio API (no files needed)
-// Usage: <a-scene space-audio>
+// Usage: <a-scene space-audio>              → hum + beep (welcome screen)
+//        <a-scene space-audio="hum: false"> → beep only  (HAL / outside views)
 // Robot AI triggers beep: document.querySelector('a-scene').components['space-audio'].playBeep()
 AFRAME.registerComponent('space-audio', {
+  schema: { hum: { type: 'boolean', default: true } },
+
   init() {
     this.ctx = null;
     this.humNodes = [];
     this.output = null;
     this.muted = window.soundControl?.getMuted?.() ?? false;
 
-    // Attempt autoplay immediately; browser suspends AudioContext until first gesture
-    this._startHum();
+    if (this.data.hum) {
+      this._startHum();
+    } else {
+      this._createCtx();
+    }
     window.addEventListener('sound-control-changed', (evt) => this.setMuted(evt.detail.muted));
+  },
+
+  // Creates AudioContext + master gain without any oscillators (used for beep-only rooms)
+  _createCtx() {
+    if (this.ctx) return;
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    this.output = this.ctx.createGain();
+    this.output.gain.setValueAtTime(this.muted ? 0 : 1, this.ctx.currentTime);
+    this.output.connect(this.ctx.destination);
+    if (this.ctx.state === 'suspended') {
+      const unlock = () => this.ctx.resume();
+      document.addEventListener('click',      unlock, { once: true });
+      document.addEventListener('keydown',    unlock, { once: true });
+      document.addEventListener('touchstart', unlock, { once: true });
+    }
   },
 
   _startHum() {
     if (this.ctx) return;
-    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    this._createCtx();
 
     const ctx = this.ctx;
-    this.output = ctx.createGain();
-    this.output.gain.setValueAtTime(this.muted ? 0 : 1, ctx.currentTime);
-    this.output.connect(ctx.destination);
 
     // Layer 1: deep bass drone at 60 Hz
     const bass = ctx.createOscillator();
@@ -97,25 +115,11 @@ AFRAME.registerComponent('space-audio', {
     mid.start();
 
     this.humNodes = [bass, mid, gain];
-
-    // If autoplay was blocked, resume AudioContext on first user gesture
-    if (ctx.state === 'suspended') {
-      const unlock = () => ctx.resume();
-      document.addEventListener('click',      unlock, { once: true });
-      document.addEventListener('keydown',    unlock, { once: true });
-      document.addEventListener('touchstart', unlock, { once: true });
-    }
   },
 
   setMuted(muted) {
     this.muted = !!muted;
-    if (!this.ctx) {
-      if (this.muted) {
-        this._startHum();
-      }
-      return;
-    }
-
+    if (!this.ctx) return;
     const gainTarget = this.muted ? 0 : 1;
     this.output.gain.cancelScheduledValues(this.ctx.currentTime);
     this.output.gain.setTargetAtTime(gainTarget, this.ctx.currentTime, 0.01);
