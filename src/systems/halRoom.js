@@ -45,7 +45,7 @@
       if (eye) eye.setAttribute('animation',
         'property:emissive-intensity;from:4.5;to:0.9;dir:alternate;loop:true;dur:3000;easing:easeInOutSine');
     };
-    window.registerSpeech?.(s, text);
+  
     speechSynthesis.speak(s);
     if (window.soundControl?.getMuted?.()) speechSynthesis.cancel();
   }
@@ -106,7 +106,11 @@ VOICE RULES:
 
   startOverlay.addEventListener('click', () => {
     startOverlay.remove();
-    animateCam();
+      // Ensure space hum starts on user gesture
+      const scene = document.querySelector('a-scene');
+      try { scene?.components?.['space-audio']?._createCtx(); } 
+      catch (e) {}
+      animateCam();
     speechSynthesis.cancel();
     const greeting = "Good morning, Dr. Bowman. I am ready to assist you. You may ask me anything about Jupiter, its moons, or our mission. I will answer as precisely as I can.";
     setTimeout(() => { showHALDialogue(greeting); speakHAL(greeting); }, 800);

@@ -66,7 +66,13 @@ AFRAME.registerComponent('hal-logic', {
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.pitch = 0.9;
         utterance.volume = 1;
-        window.registerSpeech?.(utterance, text);
+    
+        const spaceAudio =
+  document.querySelector('a-scene')
+  ?.components?.['space-audio'];
+
+spaceAudio?.playBeep?.();
+
         window.speechSynthesis.speak(utterance);
         if (window.soundControl?.getMuted?.()) window.speechSynthesis.cancel();
     },

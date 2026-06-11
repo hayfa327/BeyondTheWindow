@@ -90,6 +90,11 @@
 
   startOverlay.addEventListener('click', () => {
     startOverlay.remove();
+    // Ensure space hum starts (some browsers eat the first click before component attaches)
+    const scene = document.querySelector('a-scene');
+    try {
+  scene?.components?.['space-audio']?._createCtx?.();
+} catch (e) {}
     document.querySelector('a-scene').addEventListener('loaded', () => { animateCam(); });
     if (document.querySelector('a-scene').hasLoaded) animateCam();
     if (!halHasSpoken) {

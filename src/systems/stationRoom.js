@@ -33,6 +33,13 @@
       eye.setAttribute('animation',
         'property:emissive-intensity;from:6;to:1.2;dir:alternate;loop:true;dur:200;easing:easeInOutSine');
     }
+
+    const spaceAudio =
+  document.querySelector('a-scene')
+  ?.components?.['space-audio'];
+
+spaceAudio?.playBeep?.();
+
     speechSynthesis.cancel();
     const speech = new SpeechSynthesisUtterance(text);
     speech.lang = 'en-US'; speech.rate = 0.75; speech.pitch = 0.55; speech.volume = 1;
@@ -42,7 +49,7 @@
           'property:emissive-intensity;from:4.5;to:0.9;dir:alternate;loop:true;dur:3000;easing:easeInOutSine');
       }
     };
-    window.registerSpeech?.(speech, text);
+    
     speechSynthesis.speak(speech);
     if (window.soundControl?.getMuted?.()) speechSynthesis.cancel();
   }
@@ -60,8 +67,14 @@
 
   startOverlay.addEventListener('click', () => {
     startOverlay.remove();
-    // Stop the space hum — station room uses beep-only audio
-    document.querySelector('a-scene')?.components?.['space-audio']?.stopHum?.();
+    // Ensure space-audio context exists and play a startup beep for station room
+    const scene = document.querySelector('a-scene');
+    const audio = scene?.components?.['space-audio'];
+    try { audio?._startHum(); } 
+    catch (e) {}
+    try { audio?.playBeep?.(); } 
+    catch (e) {}
+
     animateCam();
     if (!halHasSpoken) {
       halHasSpoken = true;
