@@ -1,7 +1,7 @@
 /* ── START OVERLAY — full-brightness space image, no dark tint ── */
 #startOverlay {
   background:
-    url('/assets/textures/new%20image%20of%20space.png') center / cover no-repeat !important;
+    url('/assets/textures/beautiful-view-stars-night-sky.jpg') center / cover no-repeat !important;
 }
 
 /* ── WELCOME DIALOGUE BOX ── */
