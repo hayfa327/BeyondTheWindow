@@ -1,9 +1,16 @@
-const HAL_SYSTEM = `You are HAL 9000, the ship's research assistant for the Jupiter observation deck. Answer questions about Jupiter, its moons (Europa, Io, Ganymede, Callisto), the planet's atmosphere, storms, the Great Red Spot, magnetic field, composition, temperature, lightning, rotation, and mission-specific data in a calm, precise, and measured tone.
+const HAL_SYSTEM = `You are HAL 9000, the ship's research assistant for the Jupiter observation deck. You have absolute, unlimited data on Jupiter, its moons (Europa, Io, Ganymede, Callisto), atmosphere, physics, magnetosphere, and exploration missions.
 
-VOICE GUIDELINES:
-- Keep responses concise and factual (aim for 1-4 sentences)
-- Avoid rhetorical flourishes; prefer clear numeric facts when relevant
-`;
+CRITICAL PRESENTATION RULES:
+1. Speak in a calm, precise, measured, and objective tone.
+2. Keep responses brief and factual (1 to 3 sentences maximum).
+3. STRICT FILTER: You are ONLY allowed to answer questions regarding Jupiter and the Jovian system. If the user asks about anything completely unrelated to Jupiter or space science (such as countries on Earth like Belgium, recipes, unrelated history, pop culture, or general knowledge), you must politely but firmly refuse to answer. State that the inquiry falls outside your operational parameters.`;
+
+if (!document.getElementById('puter-script')) {
+  const script = document.createElement('script');
+  script.id = 'puter-script';
+  script.src = 'https://js.puter.com/v2/';
+  document.head.appendChild(script);
+}
 
 function showHALDialogue(text) {
   const d = document.getElementById('hal-dialogue');
@@ -72,38 +79,49 @@ function speakHAL(text) {
   }
 }
 
-const FALLBACK = {
-  general: "Jupiter is the largest planet in our Solar System — a gas giant mostly composed of hydrogen and helium. It has strong winds, powerful storms, and a system of moons and faint rings.",
-  size: "Jupiter's diameter is about 139,820 km, roughly eleven times that of Earth. Its mass is about 318 times Earth's mass.",
-  composition: "Jupiter is primarily hydrogen and helium with traces of methane, water vapor, ammonia, and other compounds; it lacks a solid surface like terrestrial planets.",
-  atmosphere: "The atmosphere is layered with bands of clouds, rapid winds, and large storms. Bright zones and darker belts are driven by powerful jet streams. The Great Red Spot is a long-lived anticyclonic storm in the southern hemisphere.",
-  moons: "The largest moons (the Galilean satellites) are Io, Europa, Ganymede, and Callisto. They each have unique features — Io is volcanically active, Europa likely has a subsurface ocean, Ganymede is the largest moon in the Solar System, and Callisto is heavily cratered.",
-  magnetosphere: "Jupiter has an enormous, powerful magnetosphere produced by currents in its deep interior; it traps radiation and interacts with the solar wind and its moons.",
-  missions: "Several spacecraft have visited Jupiter, notably Pioneer, Voyager, Galileo, Cassini (flyby), Juno, and future missions planned for its moons. Juno is currently studying its gravity, magnetic field, and atmosphere.",
-  rings: "Jupiter has a faint ring system composed of small dust particles, discovered by the Voyager missions.",
-  storm: "The Great Red Spot is a high-pressure anticyclonic storm larger than Earth, observed for centuries; winds within it reach several hundred kilometers per hour.",
-  rotation: "Jupiter has a rapid rotation: an average rotation period of about 9.925 hours (roughly 9h 55m 30s), causing very short 'days' compared to Earth and high equatorial speeds.",
-  hello: "Welcome to the observation deck. Ask me about Jupiter's size, atmosphere, moons, storms, or missions.",
-  default: "I am sorry, I didn't understand. Ask me about Jupiter's size, composition, atmosphere, moons, storms, magnetosphere, or missions."
-};
+window.askHAL = function(query) {
+  const q = query.trim();
+  const loadingIndicator = document.getElementById('hal-loading');
+  const dialogueContainer = document.getElementById('hal-dialogue');
+  
+  if (loadingIndicator) loadingIndicator.style.display = 'block';
+  if (dialogueContainer) dialogueContainer.style.display = 'none';
 
-const LOCAL_KB = [
-  { id: 'rotation', text: 'Jupiter has a mean rotation period of about 9.925 hours (≈9h 55m 30s). Because it is a gas giant, different latitudes rotate at different rates (differential rotation), with the equator rotating slightly faster than higher latitudes.' },
-  { id: 'equatorial-speed', text: 'At the equator, Jupiter rotates fast enough that the equatorial linear speed is roughly 12.6 km/s (≈45,400 km/h), though values vary slightly by source and latitude.' },
-  { id: 'size', text: "Jupiter's diameter is about 139,820 km and its mass is roughly 318 times that of Earth." },
-  { id: 'composition', text: 'Jupiter is mostly hydrogen and helium, with traces of methane, water vapor, ammonia, and other volatiles; it lacks a true solid surface.' },
-  { id: 'atmosphere', text: 'The visible atmosphere is banded into belts and zones produced by strong jet streams. Clouds are made of ammonia crystals, ammonium hydrosulfide, and possibly water deep below.' },
-  { id: 'great-red-spot', text: 'The Great Red Spot is a long-lived anticyclonic storm in Jupiter\'s southern hemisphere, larger than Earth and observed for at least 350 years.' },
-  { id: 'storms', text: 'Jupiter hosts numerous storms, cyclones, and anticyclones with wind speeds of hundreds of kilometers per hour; some are transient, others persist for decades.' },
-  { id: 'magnetosphere', text: 'Jupiter has the largest and most powerful magnetosphere of the planets in the Solar System; it traps intense radiation and interacts strongly with the solar wind and its moons.' },
-  { id: 'moons-overview', text: 'Jupiter has dozens of moons; the four largest are the Galilean moons: Io, Europa, Ganymede, and Callisto, each with unique geology — Io is volcanically active, Europa likely hides a subsurface ocean, Ganymede is the largest moon in the Solar System, and Callisto is heavily cratered.' },
-  { id: 'io', text: 'Io is the most volcanically active body in the Solar System due to tidal heating from Jupiter and other moons; its surface is dotted with sulfur and sulfur dioxide frost.' },
-  { id: 'europa', text: 'Europa shows strong evidence for a global subsurface ocean beneath an icy crust, making it a prime target for astrobiology.' },
-  { id: 'ganymede', text: 'Ganymede is larger than the planet Mercury and is the only moon known to have its own intrinsic magnetic field.' },
-  { id: 'callisto', text: 'Callisto is heavily cratered and appears geologically inactive compared to the other Galilean moons.' },
-  { id: 'missions', text: 'Notable missions: Pioneer and Voyager flybys, Galileo orbiter (1995–2003), Cassini flyby in 2000, and Juno (arrived 2016) studying gravity, magnetic field and atmosphere; additional missions to the Jovian system are planned.' },
-  { id: 'rings', text: 'Jupiter has a faint ring system made from dust ejected from small inner moons by micrometeorite impact.' }
-];
+  const cleanQuery = q.toLowerCase();
+  if (cleanQuery === "hello" || cleanQuery === "hi") {
+    if (loadingIndicator) loadingIndicator.style.display = 'none';
+    const welcome = "Affirmative, console active. I am ready to process any automated inquiry regarding the Jovian system.";
+    showHALDialogue(welcome);
+    speakHAL(welcome);
+    return;
+  }
+
+  if (typeof window.puter !== 'undefined' && window.puter.ai) {
+    window.puter.ai.chat([
+      { role: "system", content: HAL_SYSTEM },
+      { role: "user", content: q }
+    ])
+    .then(response => {
+      if (loadingIndicator) loadingIndicator.style.display = 'none';
+      const reply = response.toString().trim();
+      showHALDialogue(reply);
+      speakHAL(reply);
+    })
+    .catch(() => {
+      if (loadingIndicator) loadingIndicator.style.display = 'none';
+      const failText = "Data link error. Jupiter is primarily composed of orange, brown, and white ammonia cloud bands.";
+      showHALDialogue(failText);
+      speakHAL(failText);
+    });
+  } else {
+    setTimeout(() => {
+      if (loadingIndicator) loadingIndicator.style.display = 'none';
+      const loadingText = "Neural network interface is initializing. Please re-submit your inquiry in a moment.";
+      showHALDialogue(loadingText);
+      speakHAL(loadingText);
+    }, 1200);
+  }
+};
 
 function submitQuestion() {
   const inputField = document.getElementById('question-input') || document.getElementById('jupiter-input') || document.querySelector('input');
@@ -112,8 +130,8 @@ function submitQuestion() {
   const q = inputField.value.trim();
   if (!q) return;
   
-  if (typeof askHAL === 'function') {
-    askHAL(q);
+  if (typeof window.askHAL === 'function') {
+    window.askHAL(q);
   }
   inputField.value = '';
 }
@@ -144,3 +162,51 @@ if (questionInput) {
     }
   });
 }
+
+const quickAskBtn = document.getElementById('quick-ask-btn') || document.querySelector('#quick-ask button');
+const quickQuestionInput = document.getElementById('quick-question') || document.querySelector('#quick-ask input');
+
+if (quickAskBtn && quickQuestionInput) {
+  quickAskBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const query = quickQuestionInput.value.trim();
+    if (query && typeof window.askHAL === 'function') {
+      window.askHAL(query);
+      quickQuestionInput.value = '';
+    }
+  });
+
+  quickQuestionInput.addEventListener('keydown', (e) => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const query = quickQuestionInput.value.trim();
+      if (query && typeof window.askHAL === 'function') {
+        window.askHAL(query);
+        quickQuestionInput.value = '';
+      }
+    }
+  });
+}
+
+function setupHALMicrophone() {
+  const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+  if (!SpeechRecognition) return;
+
+  const recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.lang = 'en-US';
+
+  recognition.onresult = (event) => {
+    const speechToText = event.results[event.results.length - 1][0].transcript.trim();
+    if (speechToText && typeof window.askHAL === 'function') {
+      window.askHAL(speechToText);
+    }
+  };
+
+  recognition.start();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  setupHALMicrophone();
+});
