@@ -29,27 +29,24 @@
 
   function speakHAL(text) {
     const eye = document.querySelector('#hal-eye');
+    const spaceAudio = document.querySelector('a-scene')?.components?.['space-audio'];
     if (eye) {
       eye.setAttribute('animation',
         'property:emissive-intensity;from:6;to:1.2;dir:alternate;loop:true;dur:200;easing:easeInOutSine');
     }
-
-    const spaceAudio =
-  document.querySelector('a-scene')
-  ?.components?.['space-audio'];
-
-spaceAudio?.playBeep?.();
-
+    spaceAudio?.playBeep?.();
     speechSynthesis.cancel();
     const speech = new SpeechSynthesisUtterance(text);
     speech.lang = 'en-US'; speech.rate = 0.75; speech.pitch = 0.55; speech.volume = 1;
     speech.onend = () => {
+      spaceAudio?.setComputerLevel?.(1);
       if (eye) {
         eye.setAttribute('animation',
           'property:emissive-intensity;from:4.5;to:0.9;dir:alternate;loop:true;dur:3000;easing:easeInOutSine');
       }
     };
-    
+    window.registerSpeech?.(speech, text);
+    spaceAudio?.setComputerLevel?.(0.2);
     speechSynthesis.speak(speech);
     if (window.soundControl?.getMuted?.()) speechSynthesis.cancel();
   }
@@ -70,10 +67,9 @@ spaceAudio?.playBeep?.();
     // Ensure space-audio context exists and play a startup beep for station room
     const scene = document.querySelector('a-scene');
     const audio = scene?.components?.['space-audio'];
-    try { audio?._startHum(); } 
-    catch (e) {}
-    try { audio?.playBeep?.(); } 
-    catch (e) {}
+    try { audio?._startHum(); } catch (e) {}
+    try { audio?.playBeep?.(); } catch (e) {}
+    try { audio?.startComputerLoop?.(); } catch (e) {}
 
     animateCam();
     if (!halHasSpoken) {

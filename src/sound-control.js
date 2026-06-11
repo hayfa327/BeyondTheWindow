@@ -20,22 +20,89 @@ window.soundControl = window.soundControl || {
   }
 };
 
-if (evt.detail.muted) {
+// ── SPEECH POSITION TRACKER ──────────────────────────────────────────────────
+// Tracks the active TTS utterance so mute cancels it and unmute restarts from
+// approximately the same word (using boundary events for position tracking).
+const _speech = { text: '', offset: 0, charIndex: 0, lang: 'en-US', rate: 0.75, pitch: 0.55 };
 
-  if (window.speechSynthesis.speaking) {
-    window.speechSynthesis.cancel();
+window.registerSpeech = function(utterance, fullText) {
+  _speech.text      = fullText;
+  _speech.charIndex = 0;
+  _speech.offset    = 0;
+  _speech.lang      = utterance.lang  || 'en-US';
+  _speech.rate      = utterance.rate  || 0.75;
+  _speech.pitch     = utterance.pitch || 0.55;
+  utterance.addEventListener('boundary', (e) => {
+    _speech.charIndex = _speech.offset + (e.charIndex || 0);
+  });
+  utterance.addEventListener('end', () => {
+    _speech.text = '';
+    _speech.charIndex = 0;
+    _speech.offset    = 0;
+  });
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const sceneEl = document.querySelector('a-scene');
+  if (!sceneEl) return;
+
+  window.soundControl.init();
+
+  // Create mute toggle button
+  const audioToggle = document.createElement('button');
+  audioToggle.id = 'audio-toggle';
+  audioToggle.type = 'button';
+  audioToggle.setAttribute('aria-label', 'Toggle sound');
+  audioToggle.title = 'Toggle sound (M)';
+  document.body.appendChild(audioToggle);
+
+  function updateToggleLabel(muted) {
+    audioToggle.textContent = muted ? '🔇' : '🔊';
+    audioToggle.classList.toggle('muted', muted);
+    audioToggle.classList.toggle('active', !muted);
   }
 
-}
+  function updateSceneAudioState() {
+    const comp = sceneEl.components['space-audio'];
+    if (comp?.setMuted) comp.setMuted(window.soundControl.getMuted());
+  }
 
-  audioToggle.addEventListener('click', () => {
-    window.soundControl.toggle();
-  });
+  function handleSoundControlChange(evt) {
+    updateToggleLabel(evt.detail.muted);
+    updateSceneAudioState();
+
+    if (evt.detail.muted) {
+      // Cancel speech and save position — pause() is unreliable in Chrome
+      if (window.speechSynthesis.speaking || window.speechSynthesis.paused) {
+        window.speechSynthesis.cancel();
+      }
+    } else {
+      // Restart speech from last word boundary position
+      const remaining = (_speech.text || '').slice(_speech.charIndex).trim();
+      if (remaining) {
+        const u = new SpeechSynthesisUtterance(remaining);
+        u.lang   = _speech.lang;
+        u.rate   = _speech.rate;
+        u.pitch  = _speech.pitch;
+        u.volume = 1;
+        const resumeOffset = _speech.charIndex;
+        u.addEventListener('boundary', (e) => {
+          _speech.charIndex = resumeOffset + (e.charIndex || 0);
+        });
+        u.addEventListener('end', () => {
+          _speech.text = '';
+          _speech.charIndex = 0;
+          _speech.offset    = 0;
+        });
+        window.speechSynthesis.speak(u);
+      }
+    }
+  }
+
+  audioToggle.addEventListener('click', () => window.soundControl.toggle());
 
   window.addEventListener('keydown', (event) => {
-    if (event.key.toLowerCase() === 'm') {
-      window.soundControl.toggle();
-    }
+    if (event.key.toLowerCase() === 'm') window.soundControl.toggle();
   });
 
   window.addEventListener('sound-control-changed', handleSoundControlChange);
@@ -43,12 +110,11 @@ if (evt.detail.muted) {
   updateSceneAudioState();
   sceneEl.addEventListener('loaded', updateSceneAudioState);
 
-  // One-time visual toast when audio context initializes (helps testing autoplay/unlock)
+  // One-time toast when audio context initializes
   let _toastShown = false;
   function showAudioInitToast() {
     if (_toastShown) return; _toastShown = true;
     const t = document.createElement('div');
-    t.id = 'audio-init-toast';
     t.textContent = 'Audio initialized';
     Object.assign(t.style, {
       position: 'fixed', left: '18px', bottom: '18px', zIndex: '1000000',
@@ -56,6 +122,11 @@ if (evt.detail.muted) {
       fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '13px', boxShadow: '0 6px 18px rgba(0,0,0,0.6)'
     });
     document.body.appendChild(t);
-    setTimeout(() => { try { t.style.transition='opacity 0.4s'; t.style.opacity='0'; setTimeout(()=>t.remove(),400); } catch(e){} }, 1800);
+    setTimeout(() => {
+      t.style.transition = 'opacity 0.4s';
+      t.style.opacity = '0';
+      setTimeout(() => t.remove(), 400);
+    }, 1800);
   }
   window.addEventListener('space-audio-initialized', showAudioInitToast, { once: true });
+});

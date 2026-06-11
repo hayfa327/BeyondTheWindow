@@ -62,17 +62,15 @@ AFRAME.registerComponent('hal-logic', {
         if (this.hud) {
             this.hud.innerText = `GUIDE: "${text}"`;
         }
+        const spaceAudio = document.querySelector('a-scene')?.components?.['space-audio'];
+        spaceAudio?.playBeep?.();
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.pitch = 0.9;
         utterance.volume = 1;
-    
-        const spaceAudio =
-  document.querySelector('a-scene')
-  ?.components?.['space-audio'];
-
-spaceAudio?.playBeep?.();
-
+        utterance.onend = () => { spaceAudio?.setComputerLevel?.(1); };
+        window.registerSpeech?.(utterance, text);
+        spaceAudio?.setComputerLevel?.(0.2);
         window.speechSynthesis.speak(utterance);
         if (window.soundControl?.getMuted?.()) window.speechSynthesis.cancel();
     },

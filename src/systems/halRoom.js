@@ -34,18 +34,20 @@
   }
   function speakHAL(text) {
     const eye = document.querySelector('#hal-eye');
+    const spaceAudio = document.querySelector('a-scene')?.components?.['space-audio'];
     if (eye) eye.setAttribute('animation',
       'property:emissive-intensity;from:6;to:1.2;dir:alternate;loop:true;dur:200;easing:easeInOutSine');
-    const spaceAudio = document.querySelector('a-scene')?.components?.['space-audio'];
     if (spaceAudio?.playBeep) spaceAudio.playBeep();
     speechSynthesis.cancel();
     const s = new SpeechSynthesisUtterance(text);
     s.lang='en-US'; s.rate=0.72; s.pitch=0.5; s.volume=1;
     s.onend = () => {
+      spaceAudio?.setComputerLevel?.(1);
       if (eye) eye.setAttribute('animation',
         'property:emissive-intensity;from:4.5;to:0.9;dir:alternate;loop:true;dur:3000;easing:easeInOutSine');
     };
-  
+    window.registerSpeech?.(s, text);
+    spaceAudio?.setComputerLevel?.(0.2);
     speechSynthesis.speak(s);
     if (window.soundControl?.getMuted?.()) speechSynthesis.cancel();
   }

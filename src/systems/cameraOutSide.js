@@ -32,6 +32,7 @@
 
   function speakHAL(text) {
     const eye = document.querySelector('#hal-eye');
+    const spaceAudio = document.querySelector('a-scene')?.components?.['space-audio'];
     if (eye) {
       eye.setAttribute('color', '#FF5555');
       eye.setAttribute('animation__talk', 'property: scale; from:1 1 1; to:1.25 1.25 1.25; dir:alternate; loop:true; dur:220');
@@ -44,6 +45,7 @@
     speech.pitch = 0.55;
     speech.volume = 1;
     speech.onend = () => {
+      spaceAudio?.setComputerLevel?.(1);
       if (eye) {
         eye.removeAttribute('animation');
         eye.removeAttribute('animation__talk');
@@ -52,6 +54,7 @@
       }
     };
     window.registerSpeech?.(speech, text);
+    spaceAudio?.setComputerLevel?.(0.2);
     speechSynthesis.speak(speech);
     if (window.soundControl?.getMuted?.()) speechSynthesis.cancel();
   }

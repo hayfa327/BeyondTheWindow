@@ -11,6 +11,7 @@ AFRAME.registerComponent('space-audio', {
     this.ctx = null;
     this.humNodes = [];
     this.output = null;
+    this.computerLoop = null;
     this.muted = window.soundControl?.getMuted?.() ?? false;
 
     // Defer creation until a user gesture (browser autoplay policy)
@@ -46,9 +47,16 @@ AFRAME.registerComponent('space-audio', {
   },
 
   _startHum() {
-    if (this.humNodes.length) return;
+
     this._createCtx();
+
     if (!this.ctx) return;
+
+    if (this.ctx.state === 'suspended') {
+        this.ctx.resume();
+    }
+
+    if (this.humNodes.length) return;
     const ctx = this.ctx;
 
     // Layer 1: deep bass drone at 60 Hz
@@ -108,46 +116,61 @@ AFRAME.registerComponent('space-audio', {
     this.humNodes = [];
   },
 
-  // Short sci-fi beep at 880 Hz — called by robot AI
+  // Starts random quiet beeps every ~2.5 s — background computer ambience
+  startComputerLoop() {
+    if (this.computerLoop) return;
+    this.computerLoop = setInterval(() => {
+      if (this.muted) return;
+      if (Math.random() < 0.5) this.playSoftComputerBeep();
+    }, 2500);
+  },
+
+  stopComputerLoop() {
+    clearInterval(this.computerLoop);
+    this.computerLoop = null;
+  },
+
+  // Very quiet random-frequency blip (600–1400 Hz, 80 ms, gain 0.02)
+  playSoftComputerBeep() {
+    if (!this.ctx) this._createCtx();
+    if (!this.output) return;
+    const osc  = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 600 + Math.random() * 800;
+    gain.gain.value = 0.02;
+    osc.connect(gain);
+    gain.connect(this.output);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.08);
+  },
+
+  // Duck computer ambience while HAL speaks (0.2), restore when done (1)
+  setComputerLevel(level) {
+    if (!this.output || !this.ctx) return;
+    this.output.gain.cancelScheduledValues(this.ctx.currentTime);
+    this.output.gain.setTargetAtTime(level, this.ctx.currentTime, 0.2);
+  },
+
+  // Cinematic downward-sweep beep before HAL speaks (NASA / Kubrick style)
   playBeep() {
+    if (!this.ctx) this._createCtx();
+    const ctx  = this.ctx;
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
 
-  if (!this.ctx) {
-    this._createCtx();
-  }
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(1400, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(700, ctx.currentTime + 0.15);
 
-  const ctx = this.ctx;
+    gain.gain.setValueAtTime(0.05, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
 
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-
-  osc.type = 'triangle';
-
-  osc.frequency.setValueAtTime(
-    1400,
-    ctx.currentTime
-  );
-
-  osc.frequency.exponentialRampToValueAtTime(
-    700,
-    ctx.currentTime + 0.15
-  );
-
-  gain.gain.setValueAtTime(
-    0.25,
-    ctx.currentTime
-  );
-
-  gain.gain.exponentialRampToValueAtTime(
-    0.001,
-    ctx.currentTime + 0.18
-  );
-
-  osc.connect(gain);
-  gain.connect(this.output);
-
-  osc.start();
-  osc.stop(ctx.currentTime + 0.18);
-},
+    osc.connect(gain);
+    gain.connect(this.output);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.18);
+  },
 
   remove() {
     this.stopHum();
