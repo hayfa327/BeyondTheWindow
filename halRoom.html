@@ -3,9 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>HAL 9000 — Interface Room</title>
+
+  <!-- ── SOURCES ────────────────────────────────────────────────────────────
+    webxr-polyfill  CDN   Patches WebXR API on headsets/browsers that need it.
+                          Must load before A-Frame so it intercepts the API first.
+    aframe          CDN   Core VR framework – scene graph, WebXR, built-in comps.
+    navigation.js   local Arrow-key + VR controller locomotion with room bounds.
+    halRoom.js      local Scene systems (HAL eye animation, clock, dialogue).
+    ──────────────────────────────────────────────────────────────────────── -->
+  <script src="https://cdn.jsdelivr.net/npm/webxr-polyfill@2.0.3/build/webxr-polyfill.min.js"></script>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <script type="module" src="/src/celestial.js"></script>
+  <script type="module" src="/src/navigation.js"></script>
   <script type="module" src="/src/systems/halRoom.js"></script>
   <link rel="stylesheet" href="./style/halRoom.css">
   <link rel="stylesheet" href="/style/sound-control.css" />
@@ -36,10 +46,14 @@
   </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+
 <a-scene
   background="color:#020204"
   renderer="antialias:true; colorManagement:true; physicallyCorrectLights:true"
-  space-audio="hum: false">
+  webxr="requiredFeatures: local-floor; optionalFeatures: bounded-floor, hand-tracking"
+  vr-mode-ui="enabled: true"
+  stats>
 
   <a-assets timeout="15000">
     <a-asset-item id="jupiterModel" src="/public/assets/models/jupiterMove.glb.glb"></a-asset-item>
@@ -173,7 +187,11 @@
   
 
   
-    <a-camera wasd-controls="acceleration:15" look-controls="pointerLockEnabled:false"></a-camera>
+    <a-entity id="camRig" position="0 0 0" arrow-controls vr-locomotion>
+      <a-camera wasd-controls="enabled:false" look-controls="pointerLockEnabled:false"></a-camera>
+      <a-entity id="leftHand"  laser-controls="hand: left"  raycaster="far: 10; objects: .interactive"></a-entity>
+      <a-entity id="rightHand" laser-controls="hand: right" raycaster="far: 10; objects: .interactive"></a-entity>
+    </a-entity>
   
 
 </a-scene>
