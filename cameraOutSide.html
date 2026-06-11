@@ -3,17 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Jupiter Observation Deck</title>
-<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  
 
- 
-  <script type="module" src="/src/celestial.js"></script>
-  <script type="module" src="/src/systems/cameraOutSide.js"></script>
-  <script type="module" src="/src/systems/inlineHal.js"></script>
-  <link rel="stylesheet" href="./style/cameraOutSide.css">
-  <link rel="stylesheet" href="/style/sound-control.css" />
-  <link rel="stylesheet" href="/style/sound-zoom-Bg.css" />
+<!-- ── SOURCES ──────────────────────────────────────────────────────────────
+  webxr-polyfill   CDN   Patches WebXR API on headsets/browsers that need it.
+                         Must load before A-Frame so it intercepts the API first.
+  aframe           CDN   Core VR framework – scene graph, WebXR, built-in comps.
+  navigation.js    local Arrow-key + VR controller locomotion with room bounds.
+  cameraOutSide.js local Scene systems (space-audio, outside view logic).
+  inlineHal.js     local Inline HAL 9000 dialogue HUD.
+  ──────────────────────────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/webxr-polyfill@2.0.3/build/webxr-polyfill.min.js"></script>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script type="module" src="/src/navigation.js"></script>
+<script type="module" src="/src/systems/cameraOutSide.js"></script>
+<script type="module" src="/src/systems/inlineHal.js"></script>
+<link rel="stylesheet" href="./style/cameraOutSide.css">
+<link rel="stylesheet" href="/style/sound-control.css" />
+<link rel="stylesheet" href="/style/sound-zoom-Bg.css" />
 </head>
 <body>
 
@@ -44,9 +52,14 @@
   <button id="quick-ask-btn" style="padding:8px 12px;border-radius:8px;background:#2E6AFF;border:none;color:#fff;cursor:pointer;">Send</button>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+
 <a-scene
   background="color:#050508"
   renderer="antialias:true; colorManagement:true; physicallyCorrectLights:true"
+  webxr="requiredFeatures: local-floor; optionalFeatures: bounded-floor, hand-tracking"
+  vr-mode-ui="enabled: true"
+  stats
   space-audio="hum: false">
 
   <a-assets>
@@ -350,6 +363,7 @@
   <a-entity id="jupiter-system" position="-3 3.2 -140">
     <a-entity id="jupiter"
       gltf-model="#jupiterModel"
+      gltf-emissive-fix
       position="0 0 0"
       scale="2 2 2"
       rotation="3 0 -2"
@@ -412,11 +426,18 @@
     color="#FFE8CC" intensity="10" distance="300" decay="1"></a-light>
 
   <!-- ══ CAMERA ══ -->
-  <a-entity id="camRig" position="0 1.7 9" rotation="0 0 0">
+  <!-- Bounds: X stays within room width; Z lets player walk from start (9)
+       all the way forward to just inside the window (-9.5). WASD disabled
+       so all keyboard movement is bounded through the rig. -->
+  <a-entity id="camRig" position="0 1.7 9" rotation="0 0 0"
+    arrow-controls="xMin: -9; xMax: 9; zMin: -9.5; zMax: 9.5"
+    vr-locomotion="xMin: -9; xMax: 9; zMin: -9.5; zMax: 9.5">
     <a-camera fov="72"
       look-controls="enabled:true; reverseMouseDrag:false"
-      wasd-controls="enabled:true">
+      wasd-controls="enabled:false">
     </a-camera>
+    <a-entity id="leftHand"  laser-controls="hand: left"  raycaster="far: 10; objects: .interactive"></a-entity>
+    <a-entity id="rightHand" laser-controls="hand: right" raycaster="far: 10; objects: .interactive"></a-entity>
   </a-entity>
 
 </a-scene>

@@ -3,9 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Jupiter Observation Deck</title>
+
+<!-- ── SOURCES ──────────────────────────────────────────────────────────────
+  webxr-polyfill  CDN   Patches WebXR API on headsets/browsers that need it.
+                        Must load before A-Frame so it intercepts the API first.
+  aframe          CDN   Core VR framework – scene graph, WebXR, built-in comps.
+  navigation.js   local Arrow-key + VR controller locomotion with room bounds.
+  stationRoom.js  local Scene systems (space-audio, HAL orbit, etc.).
+  inlineHal.js    local Inline HAL 9000 dialogue HUD.
+  ──────────────────────────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/webxr-polyfill@2.0.3/build/webxr-polyfill.min.js"></script>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-<script type="module" src="/src/celestial.js"></script>
+<script type="module" src="/src/navigation.js"></script>
 <script type="module" src="/src/systems/stationRoom.js"></script>
 <script type="module" src="/src/systems/inlineHal.js"></script>
 <link rel="stylesheet" href="./style/stationRoom.css">
@@ -39,9 +50,14 @@
   <button id="quick-ask-btn" style="padding:8px 12px;border-radius:8px;background:#2E6AFF;border:none;color:#fff;cursor:pointer;">Send</button>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+
 <a-scene
   background="color:#020204"
   renderer="antialias:true; colorManagement:true; physicallyCorrectLights:true"
+  webxr="requiredFeatures: local-floor; optionalFeatures: bounded-floor, hand-tracking"
+  vr-mode-ui="enabled: true"
+  stats
   space-audio="hum: true">
 
   <a-assets timeout="15000">
@@ -390,6 +406,7 @@
   <a-entity id="jupiter-system" position="-1.5 3.8 -140">
     <a-entity id="jupiter"
       gltf-model="#jupiterModel"
+      gltf-emissive-fix
       position="0 0 0"
       scale="1.6 1.6 1.6"
       rotation="3 0 -2"
@@ -479,11 +496,14 @@
     color="#CCDEFF" intensity="10" distance="400" decay="1"></a-light>
 
   <!-- ══ CAMERA ══ -->
-  <a-entity id="camRig" position="0 1.6 -0.5" rotation="0 0 0">
+  <a-entity id="camRig" position="0 1.6 -0.5" rotation="0 0 0"
+    arrow-controls vr-locomotion>
     <a-camera fov="70"
       look-controls="enabled:true"
       wasd-controls="enabled:false">
     </a-camera>
+    <a-entity id="leftHand"  laser-controls="hand: left"  raycaster="far: 10; objects: .interactive"></a-entity>
+    <a-entity id="rightHand" laser-controls="hand: right" raycaster="far: 10; objects: .interactive"></a-entity>
   </a-entity>
 
 </a-scene>
