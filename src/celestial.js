@@ -82,6 +82,7 @@ AFRAME.registerComponent('space-audio', {
     mid.start();
 
     this.humNodes = [bass, mid, gain];
+    console.log('[space-audio] Hum started. Muted:', this.muted, 'Output gain:', this.output.gain.value);
   },
 
   setMuted(muted) {

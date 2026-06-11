@@ -92,12 +92,23 @@
   document.head.appendChild(style);
 
   startOverlay.addEventListener('click', () => {
+    console.log('[cameraOutSide] Overlay clicked!');
     startOverlay.remove();
     // Ensure space hum starts (some browsers eat the first click before component attaches)
     const scene = document.querySelector('a-scene');
-    try {
-  scene?.components?.['space-audio']?._createCtx?.();
-} catch (e) {}
+    console.log('[cameraOutSide] Scene:', scene, 'Components:', scene?.components);
+    const startHum = () => {
+      console.log('[cameraOutSide] Calling _startHum()');
+      try { 
+        const comp = scene?.components?.['space-audio'];
+        console.log('[cameraOutSide] space-audio component:', comp);
+        comp?._startHum?.(); 
+      } catch (e) {
+        console.error('[cameraOutSide] Error calling _startHum():', e);
+      }
+    };
+    startHum();
+    setTimeout(startHum, 50);
     document.querySelector('a-scene').addEventListener('loaded', () => { animateCam(); });
     if (document.querySelector('a-scene').hasLoaded) animateCam();
     if (!halHasSpoken) {

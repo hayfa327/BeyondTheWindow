@@ -108,11 +108,14 @@ VOICE RULES:
 
   startOverlay.addEventListener('click', () => {
     startOverlay.remove();
-      // Ensure space hum starts on user gesture
-      const scene = document.querySelector('a-scene');
-      try { scene?.components?.['space-audio']?._createCtx(); } 
-      catch (e) {}
-      animateCam();
+    // Ensure space hum starts on user gesture
+    const scene = document.querySelector('a-scene');
+    const startHum = () => {
+      try { scene?.components?.['space-audio']?._startHum?.(); } catch (e) {}
+    };
+    startHum();
+    setTimeout(startHum, 50);
+    animateCam();
     speechSynthesis.cancel();
     const greeting = "Good morning, Dr. Bowman. I am ready to assist you. You may ask me anything about Jupiter, its moons, or our mission. I will answer as precisely as I can.";
     setTimeout(() => { showHALDialogue(greeting); speakHAL(greeting); }, 800);

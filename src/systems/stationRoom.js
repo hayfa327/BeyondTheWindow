@@ -67,7 +67,7 @@
     // Ensure space-audio context exists and play a startup beep for station room
     const scene = document.querySelector('a-scene');
     const audio = scene?.components?.['space-audio'];
-    try { audio?._startHum(); } catch (e) {}
+    try { audio?._createCtx?.(); } catch (e) {}
     try { audio?.playBeep?.(); } catch (e) {}
     try { audio?.startComputerLoop?.(); } catch (e) {}
 
