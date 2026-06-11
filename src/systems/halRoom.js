@@ -45,8 +45,9 @@
       if (eye) eye.setAttribute('animation',
         'property:emissive-intensity;from:4.5;to:0.9;dir:alternate;loop:true;dur:3000;easing:easeInOutSine');
     };
+    window.registerSpeech?.(s, text);
     speechSynthesis.speak(s);
-    if (window.soundControl?.getMuted?.()) setTimeout(() => speechSynthesis.pause(), 50);
+    if (window.soundControl?.getMuted?.()) speechSynthesis.cancel();
   }
 
   const HAL_SYSTEM = `You are HAL 9000, the artificial intelligence aboard the Discovery One spacecraft on a mission to Jupiter. Your voice is calm, precise, and measured. You never rush.

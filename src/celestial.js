@@ -129,6 +129,16 @@ AFRAME.registerComponent('space-audio', {
     this.setMuted(!this.muted);
   },
 
+  // Fades out and stops the space hum oscillators (called when leaving the welcome screen)
+  stopHum() {
+    if (!this.output || !this.ctx) return;
+    this.output.gain.setTargetAtTime(0, this.ctx.currentTime, 0.5);
+    setTimeout(() => {
+      this.humNodes.forEach(n => { try { n.stop?.(); n.disconnect(); } catch(e) {} });
+      this.humNodes = [];
+    }, 2000);
+  },
+
   // Short sci-fi beep at 880 Hz — called by robot AI
   playBeep() {
     if (!this.ctx) {

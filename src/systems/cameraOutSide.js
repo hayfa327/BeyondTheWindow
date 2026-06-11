@@ -37,6 +37,7 @@
       eye.setAttribute('animation__talk', 'property: scale; from:1 1 1; to:1.25 1.25 1.25; dir:alternate; loop:true; dur:220');
       eye.setAttribute('animation', 'property:emissive-intensity;from:4;to:1;dir:alternate;loop:true;dur:250;easing:easeInOutSine');
     }
+    speechSynthesis.cancel();
     const speech = new SpeechSynthesisUtterance(text);
     speech.lang = 'en-US';
     speech.rate = 0.75;
@@ -50,8 +51,9 @@
         eye.setAttribute('animation', 'property:emissive-intensity;from:3;to:0.7;dir:alternate;loop:true;dur:3000;easing:easeInOutSine');
       }
     };
+    window.registerSpeech?.(speech, text);
     speechSynthesis.speak(speech);
-    if (window.soundControl?.getMuted?.()) setTimeout(() => speechSynthesis.pause(), 50);
+    if (window.soundControl?.getMuted?.()) speechSynthesis.cancel();
   }
 
   const HAL_GREETING = "I have studied Jupiter for 847 days. I still find its scale difficult to comprehend.";

@@ -20,6 +20,28 @@ window.soundControl = window.soundControl || {
   }
 };
 
+// ── SPEECH POSITION TRACKER ──────────────────────────────────────────────────
+// Tracks the active TTS utterance so mute cancels it and unmute restarts from
+// approximately the same word (using boundary events for position tracking).
+const _speech = { text: '', offset: 0, charIndex: 0, lang: 'en-US', rate: 0.75, pitch: 0.55 };
+
+window.registerSpeech = function(utterance, fullText) {
+  _speech.text     = fullText;
+  _speech.charIndex = 0;
+  _speech.offset   = 0;
+  _speech.lang     = utterance.lang  || 'en-US';
+  _speech.rate     = utterance.rate  || 0.75;
+  _speech.pitch    = utterance.pitch || 0.55;
+  utterance.addEventListener('boundary', (e) => {
+    _speech.charIndex = _speech.offset + (e.charIndex || 0);
+  });
+  utterance.addEventListener('end', () => {
+    _speech.text = '';
+    _speech.charIndex = 0;
+    _speech.offset    = 0;
+  });
+};
+
 function isSoundMuted() {
   return window.soundControl?.getMuted?.() ?? false;
 }
@@ -53,10 +75,32 @@ document.addEventListener('DOMContentLoaded', () => {
   function handleSoundControlChange(evt) {
     updateToggleLabel(evt.detail.muted);
     updateSceneAudioState();
+
     if (evt.detail.muted) {
-      window.speechSynthesis.pause();
+      // Cancel speech and save position — pause() is unreliable in Chrome
+      if (window.speechSynthesis.speaking || window.speechSynthesis.paused) {
+        window.speechSynthesis.cancel();
+      }
     } else {
-      window.speechSynthesis.resume();
+      // Restart speech from last word boundary position
+      const remaining = (_speech.text || '').slice(_speech.charIndex).trim();
+      if (remaining) {
+        const u = new SpeechSynthesisUtterance(remaining);
+        u.lang   = _speech.lang;
+        u.rate   = _speech.rate;
+        u.pitch  = _speech.pitch;
+        u.volume = 1;
+        const resumeOffset = _speech.charIndex;
+        u.addEventListener('boundary', (e) => {
+          _speech.charIndex = resumeOffset + (e.charIndex || 0);
+        });
+        u.addEventListener('end', () => {
+          _speech.text = '';
+          _speech.charIndex = 0;
+          _speech.offset    = 0;
+        });
+        window.speechSynthesis.speak(u);
+      }
     }
   }
 

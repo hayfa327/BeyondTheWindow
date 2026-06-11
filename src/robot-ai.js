@@ -62,11 +62,13 @@ AFRAME.registerComponent('hal-logic', {
         if (this.hud) {
             this.hud.innerText = `GUIDE: "${text}"`;
         }
+        window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.pitch = 0.9;
         utterance.volume = 1;
+        window.registerSpeech?.(utterance, text);
         window.speechSynthesis.speak(utterance);
-        if (window.soundControl?.getMuted?.()) setTimeout(() => speechSynthesis.pause(), 50);
+        if (window.soundControl?.getMuted?.()) window.speechSynthesis.cancel();
     },
 
     tick: function () {
