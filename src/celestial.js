@@ -60,9 +60,8 @@ AFRAME.registerComponent('space-audio', {
     this.output = null;
     this.muted = window.soundControl?.getMuted?.() ?? false;
 
-    // Start audio only after a user gesture (browser requirement)
-    document.addEventListener('click', () => this._startHum(), { once: true });
-    document.addEventListener('keydown', () => this._startHum(), { once: true });
+    // Attempt autoplay immediately; browser suspends AudioContext until first gesture
+    this._startHum();
     window.addEventListener('sound-control-changed', (evt) => this.setMuted(evt.detail.muted));
   },
 
@@ -98,6 +97,14 @@ AFRAME.registerComponent('space-audio', {
     mid.start();
 
     this.humNodes = [bass, mid, gain];
+
+    // If autoplay was blocked, resume AudioContext on first user gesture
+    if (ctx.state === 'suspended') {
+      const unlock = () => ctx.resume();
+      document.addEventListener('click',      unlock, { once: true });
+      document.addEventListener('keydown',    unlock, { once: true });
+      document.addEventListener('touchstart', unlock, { once: true });
+    }
   },
 
   setMuted(muted) {

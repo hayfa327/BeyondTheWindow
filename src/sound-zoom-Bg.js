@@ -1,13 +1,25 @@
 // sound-zoom-Bg.js
-// Guarantees space audio starts on the very first user gesture (click or key),
-// which includes the "CLICK ANYWHERE TO BEGIN" start overlay.
-// Works alongside celestial.js — _startHum() is idempotent so double-calls are safe.
+// — Unlocks AudioContext on first gesture (backup for celestial.js autoplay)
+// — Zooms the background sky sphere in/out in sync with Jupiter zoom
 
-function startSpaceAudio() {
-  const scene = document.querySelector('a-scene');
-  const comp = scene?.components?.['space-audio'];
+// ── AUDIO UNLOCK ─────────────────────────────────────────────────────────────
+function unlockAudio() {
+  const comp = document.querySelector('a-scene')?.components?.['space-audio'];
+  if (comp?.ctx?.state === 'suspended') comp.ctx.resume();
+  // Also try _startHum in case init hasn't fired yet
   if (comp?._startHum) comp._startHum();
 }
+document.addEventListener('click',      unlockAudio, { once: true });
+document.addEventListener('keydown',    unlockAudio, { once: true });
+document.addEventListener('touchstart', unlockAudio, { once: true });
 
-document.addEventListener('click',   startSpaceAudio, { once: true });
-document.addEventListener('keydown', startSpaceAudio, { once: true });
+// ── BACKGROUND ZOOM ──────────────────────────────────────────────────────────
+// When Jupiter comes closer the sky texture zooms in (repeat shrinks → fills more of view).
+// jupiterZ range: -200 (far) to -40 (close)
+document.addEventListener('wheel', () => {
+  const sky = document.querySelector('#nebula1');
+  if (!sky || typeof window.jupiterZ === 'undefined') return;
+  const t = (window.jupiterZ - (-200)) / (-40 - (-200)); // 0 = far, 1 = close
+  const repeat = (1.0 - t * 0.55).toFixed(3);            // 1.0 far → 0.45 close
+  sky.setAttribute('material', 'repeat', `${repeat} ${repeat}`);
+});

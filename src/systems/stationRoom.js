@@ -48,10 +48,12 @@
   const startOverlay = document.createElement('div');
   startOverlay.id = 'startOverlay';
   startOverlay.innerHTML = `
-    <div class="hal-title">HAL 9000</div>
-    <div class="deck-title">JUPITER OBSERVATION DECK</div>
-    <div class="click-prompt">CLICK ANYWHERE TO BEGIN</div>
-    <div class="pulse-dot"></div>`;
+    <div class="welcome-box">
+      <div class="hal-title">HAL 9000</div>
+      <div class="deck-title">JUPITER OBSERVATION DECK</div>
+      <div class="click-prompt">CLICK ANYWHERE TO BEGIN</div>
+      <div class="pulse-dot"></div>
+    </div>`;
   document.body.appendChild(startOverlay);
 
   startOverlay.addEventListener('click', () => {

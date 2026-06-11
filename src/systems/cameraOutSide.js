@@ -59,16 +59,18 @@
   const startOverlay = document.createElement('div');
   startOverlay.id = 'startOverlay';
   startOverlay.innerHTML = `
-    <div class="hal-title">HAL 9000</div>
-    <div class="deck-title">JUPITER OBSERVATION DECK</div>
-    <div class="click-prompt">CLICK ANYWHERE TO BEGIN</div>
-    <div class="pulse-dot"></div>`;
+    <div class="welcome-box">
+      <div class="hal-title">HAL 9000</div>
+      <div class="deck-title">JUPITER OBSERVATION DECK</div>
+      <div class="click-prompt">CLICK ANYWHERE TO BEGIN</div>
+      <div class="pulse-dot"></div>
+    </div>`;
 
   Object.assign(startOverlay.style, {
     position: 'fixed', inset: '0', zIndex: '999999',
     display: 'flex', flexDirection: 'column',
     alignItems: 'center', justifyContent: 'center',
-    background: 'rgba(0,0,10,0.55)', cursor: 'pointer',
+    cursor: 'pointer',
     fontFamily: "'Courier New', monospace"
   });
   startOverlay.querySelector('.hal-title') && null;
