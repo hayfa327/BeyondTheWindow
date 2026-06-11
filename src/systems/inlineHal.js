@@ -162,3 +162,51 @@ if (questionInput) {
     }
   });
 }
+
+const quickAskBtn = document.getElementById('quick-ask-btn') || document.querySelector('#quick-ask button');
+const quickQuestionInput = document.getElementById('quick-question') || document.querySelector('#quick-ask input');
+
+if (quickAskBtn && quickQuestionInput) {
+  quickAskBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const query = quickQuestionInput.value.trim();
+    if (query && typeof window.askHAL === 'function') {
+      window.askHAL(query);
+      quickQuestionInput.value = '';
+    }
+  });
+
+  quickQuestionInput.addEventListener('keydown', (e) => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const query = quickQuestionInput.value.trim();
+      if (query && typeof window.askHAL === 'function') {
+        window.askHAL(query);
+        quickQuestionInput.value = '';
+      }
+    }
+  });
+}
+
+function setupHALMicrophone() {
+  const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+  if (!SpeechRecognition) return;
+
+  const recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.lang = 'en-US';
+
+  recognition.onresult = (event) => {
+    const speechToText = event.results[event.results.length - 1][0].transcript.trim();
+    if (speechToText && typeof window.askHAL === 'function') {
+      window.askHAL(speechToText);
+    }
+  };
+
+  recognition.start();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  setupHALMicrophone();
+});
