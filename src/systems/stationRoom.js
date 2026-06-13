@@ -22,9 +22,6 @@
 
   const HAL_GREETING =
     "Good morning, Dr. Bowman. Jupiter is now forty-one hours away. " +
-    "The giant world before you is the largest planet in our Solar System, " +
-    "a vast sphere of hydrogen and helium whose storms have raged for centuries. " +
-    "The Great Red Spot visible from here is a storm larger than Earth itself. " +
     "Would you like to learn more about Jupiter?";
 
   function speakHAL(text) {
