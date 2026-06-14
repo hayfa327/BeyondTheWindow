@@ -35,12 +35,14 @@ function speakHAL(text) {
     eye.setAttribute('animation', 'property:emissive-intensity;from:6;to:1.2;dir:alternate;loop:true;dur:200;easing:easeInOutSine');
   }
   try {
-    speechSynthesis.cancel();
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
     const utt = new SpeechSynthesisUtterance(text);
     utt.lang = 'en-US';
     
     const chooseVoice = () => {
-      const voices = speechSynthesis.getVoices() || [];
+      const voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
       const preferredNames = ['Samantha', 'Alex', 'Victoria', 'Serena', 'Google UK English Female', 'Google US English', 'Karen', 'Fiona'];
       let v = voices.find(v => preferredNames.some(p => v.name && v.name.includes(p)));
       if (!v) v = voices.find(v => v.lang && v.lang.startsWith('en') && v.name && /female|FEMALE|Female/i.test(v.name));
@@ -52,15 +54,15 @@ function speakHAL(text) {
       utt.volume = 1;
     };
 
-    if (!speechSynthesis.getVoices() || speechSynthesis.getVoices().length === 0) {
+    if (!window.speechSynthesis || !window.speechSynthesis.getVoices() || window.speechSynthesis.getVoices().length === 0) {
       const handler = () => {
-        try { chooseVoice(); speechSynthesis.speak(utt); } catch (e) { }
-        speechSynthesis.removeEventListener('voiceschanged', handler);
+        try { chooseVoice(); window.speechSynthesis.speak(utt); } catch (e) { }
+        if (window.speechSynthesis) window.speechSynthesis.removeEventListener('voiceschanged', handler);
       };
-      speechSynthesis.addEventListener('voiceschanged', handler);
+      if (window.speechSynthesis) window.speechSynthesis.addEventListener('voiceschanged', handler);
     } else {
       chooseVoice();
-      speechSynthesis.speak(utt);
+      window.speechSynthesis.speak(utt);
     }
 
     utt.onstart = () => {
@@ -73,6 +75,9 @@ function speakHAL(text) {
         eye.removeAttribute('animation__talk');
         eye.setAttribute('animation', 'property:emissive-intensity;from:4.5;to:0.9;dir:alternate;loop:true;dur:3000;easing:easeInOutSine');
       }
+    };
+    utt.onerror = () => {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
     };
   } catch (e) {
     if (eye) eye.setAttribute('animation', 'property:emissive-intensity;from:4.5;to:0.9;dir:alternate;loop:true;dur:3000;easing:easeInOutSine');
@@ -90,7 +95,7 @@ window.askHAL = function(query) {
   const cleanQuery = q.toLowerCase();
   if (cleanQuery === "hello" || cleanQuery === "hi") {
     if (loadingIndicator) loadingIndicator.style.display = 'none';
-    const welcome = "Affirmative, console active. I am ready to process any automated inquiry regarding the Jovian system.";
+    const welcome = "Console active. Ready for Jovian system inquiries.";
     showHALDialogue(welcome);
     speakHAL(welcome);
     return;
@@ -100,7 +105,9 @@ window.askHAL = function(query) {
     window.puter.ai.chat([
       { role: "system", content: HAL_SYSTEM },
       { role: "user", content: q }
-    ])
+    ], {
+      model: "gemini-2.5-flash"
+    })
     .then(response => {
       if (loadingIndicator) loadingIndicator.style.display = 'none';
       const reply = response.toString().trim();
@@ -109,14 +116,14 @@ window.askHAL = function(query) {
     })
     .catch(() => {
       if (loadingIndicator) loadingIndicator.style.display = 'none';
-      const failText = "Data link error. Jupiter is primarily composed of orange, brown, and white ammonia cloud bands.";
+      const failText = "Data link error. Jupiter is primarily composed of hydrogen and helium.";
       showHALDialogue(failText);
       speakHAL(failText);
     });
   } else {
     setTimeout(() => {
       if (loadingIndicator) loadingIndicator.style.display = 'none';
-      const loadingText = "Neural network interface is initializing. Please re-submit your inquiry in a moment.";
+      const loadingText = "Interface initializing. Re-submit in a moment.";
       showHALDialogue(loadingText);
       speakHAL(loadingText);
     }, 1200);
@@ -204,9 +211,16 @@ function setupHALMicrophone() {
     }
   };
 
-  recognition.start();
+  try {
+    recognition.start();
+  } catch (e) {}
 }
 
 window.addEventListener('DOMContentLoaded', () => {
   setupHALMicrophone();
 });
+window.addEventListener('click', () => {
+  if (window.speechSynthesis && window.speechSynthesis.speaking === false && window.speechSynthesis.pending === false) {
+    window.speechSynthesis.resume();
+  }
+}, { once: true });
